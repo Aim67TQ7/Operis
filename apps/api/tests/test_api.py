@@ -1,0 +1,225 @@
+import json
+from uuid import uuid4
+
+import httpx
+import pytest
+from fastapi.testclient import TestClient
+
+from operis.config import Settings
+from operis.gateway import Gateway
+from operis.main import create_app
+
+TENANT = "10000000-0000-0000-0000-000000000001"
+USER = "20000000-0000-0000-0000-000000000001"
+HEADERS = {"Origin": "https://operis.example"}
+
+
+@pytest.fixture
+def harness():
+    settings = Settings(
+        environment="production",
+        app_origin="https://operis.example",
+        supabase_url="https://identity.example",
+        supabase_publishable_key="public-test-key",
+    )
+    calls = []
+    behavior = {"role": "admin", "member": True, "failure": None}
+
+    def handler(request):
+        calls.append(request)
+        if behavior["failure"]:
+            return httpx.Response(behavior["failure"], json={"error": "sensitive-upstream-detail"})
+        path = request.url.path
+        if path == "/auth/v1/user":
+            return httpx.Response(
+                200,
+                json={"id": USER, "email": "admin@example.com", "email_confirmed_at": "2026-01-01T00:00:00Z"},
+            )
+        if path == "/auth/v1/verify":
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "private-test-access-token",
+                    "refresh_token": "private-test-refresh-token",
+                    "expires_in": 3600,
+                },
+            )
+        if path.startswith("/auth/"):
+            return httpx.Response(200, json={})
+        if path.endswith("operis_memberships"):
+            return httpx.Response(
+                200,
+                json=[{"tenant_id": TENANT, "user_id": USER, "role": behavior["role"]}]
+                if behavior["member"]
+                else [],
+            )
+        if request.method in ("POST", "PATCH"):
+            return httpx.Response(201, json=[{"id": str(uuid4()), **json.loads(request.content)}])
+        if path.endswith("operis_tenants"):
+            return httpx.Response(200, json=[{"id": TENANT, "name": "Test organization"}])
+        return httpx.Response(200, json=[])
+
+    app = create_app(settings)
+    with TestClient(app, base_url="https://operis.example") as client:
+        transport_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        app.state.gateway = Gateway(settings, transport_client)
+        client.cookies.set(settings.cookie_name, "user-access-token")
+        yield client, calls, behavior
+        client.portal.call(transport_client.aclose)
+
+
+def test_live_and_unconfigured_readiness():
+    with TestClient(create_app(Settings(environment="test"))) as client:
+        assert client.get("/api/health/live").status_code == 200
+        assert client.get("/api/health/ready").status_code == 503
+
+
+def test_missing_cookie_denies_access(harness):
+    client, calls, _ = harness
+    client.cookies.clear()
+    assert client.get("/api/me").status_code == 401
+    assert calls == []
+
+
+def test_cross_origin_and_missing_origin_rejected_before_auth(harness):
+    client, calls, _ = harness
+    for origin in [{}, {"Origin": "https://hostile.example"}]:
+        assert (
+            client.post("/api/auth/code", json={"email": "admin@example.com"}, headers=origin).status_code
+            == 403
+        )
+    assert calls == []
+
+
+def test_tokens_never_returned_to_javascript_and_cookie_is_secure(harness):
+    client, _, _ = harness
+    response = client.post(
+        "/api/auth/verify", json={"email": "admin@example.com", "code": "123456"}, headers=HEADERS
+    )
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": True}
+    cookie = response.headers["set-cookie"]
+    assert "HttpOnly" in cookie and "Secure" in cookie and "SameSite=strict" in cookie and "Path=/" in cookie
+    assert "__Host-operis_session=" in cookie
+    assert "refresh" not in cookie and "token" not in response.text
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_signin_cannot_create_users(harness):
+    client, calls, _ = harness
+    assert (
+        client.post("/api/auth/code", json={"email": "admin@example.com"}, headers=HEADERS).status_code == 202
+    )
+    assert json.loads(calls[-1].content)["create_user"] is False
+
+
+def test_invalid_input_does_not_echo_code_or_email(harness):
+    client, calls, _ = harness
+    response = client.post(
+        "/api/auth/verify", json={"email": "private@example.com", "code": "private-secret"}, headers=HEADERS
+    )
+    assert response.status_code == 422
+    assert "private" not in response.text
+    assert calls == []
+
+
+def test_nonmember_blocked_before_data_request(harness):
+    client, calls, behavior = harness
+    behavior["member"] = False
+    response = client.get(f"/api/tenants/{TENANT}/workspace")
+    assert response.status_code == 404
+    assert len(calls) == 2
+
+
+def test_viewer_cannot_create_company(harness):
+    client, calls, behavior = harness
+    behavior["role"] = "viewer"
+    response = client.post(
+        f"/api/tenants/{TENANT}/companies", json={"code": "ACME", "name": "Company"}, headers=HEADERS
+    )
+    assert response.status_code == 403
+    assert all(r.method == "GET" for r in calls)
+
+
+def test_company_write_is_scoped_correlated_and_user_authenticated(harness):
+    client, calls, _ = harness
+    response = client.post(
+        f"/api/tenants/{TENANT}/companies", json={"code": "ACME", "name": "Company"}, headers=HEADERS
+    )
+    assert response.status_code == 201
+    request = calls[-1]
+    assert json.loads(request.content)["tenant_id"] == TENANT
+    assert request.headers["authorization"] == "Bearer user-access-token"
+    assert request.headers["x-request-id"] == response.headers["x-request-id"]
+
+
+def test_client_cannot_override_tenant(harness):
+    client, calls, _ = harness
+    response = client.post(
+        f"/api/tenants/{TENANT}/companies",
+        json={"code": "ACME", "name": "Company", "tenant_id": str(uuid4())},
+        headers=HEADERS,
+    )
+    assert response.status_code == 422
+    assert all(r.method == "GET" for r in calls)
+
+
+def test_site_must_belong_to_visible_company(harness):
+    client, calls, _ = harness
+    response = client.post(
+        f"/api/tenants/{TENANT}/sites",
+        json={"code": "SITE", "name": "Facility", "company_id": str(uuid4())},
+        headers=HEADERS,
+    )
+    assert response.status_code == 404
+    assert all(r.method == "GET" for r in calls)
+
+
+def test_upstream_error_redacted(harness):
+    client, _, behavior = harness
+    behavior["failure"] = 500
+    response = client.get("/api/me")
+    assert response.status_code == 503
+    assert "sensitive" not in response.text
+
+
+def test_invalid_session_is_not_accepted(harness):
+    client, _, behavior = harness
+    behavior["failure"] = 401
+    assert client.get("/api/me").status_code == 401
+
+
+def test_logout_revokes_provider_session_and_clears_cookie(harness):
+    client, calls, _ = harness
+    response = client.post("/api/auth/logout", json={}, headers=HEADERS)
+    assert response.status_code == 200
+    assert "Max-Age=0" in response.headers["set-cookie"]
+    assert calls[-1].url.path == "/auth/v1/logout"
+    assert calls[-1].url.params["scope"] == "local"
+
+
+def test_verification_attempts_are_bounded(harness):
+    client, _, _ = harness
+    for _ in range(10):
+        client.post(
+            "/api/auth/verify", json={"email": "admin@example.com", "code": "123456"}, headers=HEADERS
+        )
+    assert (
+        client.post(
+            "/api/auth/verify", json={"email": "admin@example.com", "code": "123456"}, headers=HEADERS
+        ).status_code
+        == 429
+    )
+
+
+def test_production_fails_closed_without_configuration():
+    with pytest.raises(ValueError):
+        Settings(environment="production")
+
+
+def test_html_form_post_is_rejected(harness):
+    client, calls, _ = harness
+    assert (
+        client.post("/api/auth/code", data={"email": "admin@example.com"}, headers=HEADERS).status_code == 415
+    )
+    assert calls == []

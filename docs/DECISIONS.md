@@ -1,0 +1,13 @@
+# Architecture decisions
+
+Append-only. Owner of product decisions: Robert Clausing. Implementation proposals: engineering.
+
+| Date | Decision | Status | Evidence | Consequence | Supersedes |
+| --- | --- | --- | --- | --- | --- |
+| 2026-09-05 | Start new Operis foundation; move Lovable template discovery/rebuild to Phase 2 | Approved by user | Conversation: “start the build … lovable template builds in phase 2” | Legacy access is no longer a prerequisite for this slice | Seed's full legacy discovery gate before construction |
+| 2026-09-05 | Retain Vite, React, TypeScript, Python/FastAPI, Supabase/Postgres, Netlify and Docker direction | Accepted seed constraint | Uploaded build seed sections 7–8 | No alternate Worker backend or frontend framework | None |
+| 2026-09-05 | Modular monolith, same-origin API, RLS enforced with caller JWT | Implemented; deployment pending | apps/api/operis; supabase/schema.sql | No service-role credential in runtime; proxy must preserve cookies and Origin | None |
+| 2026-09-05 | Email-code sign-in for already provisioned verified users; no public signup | Proposed first-release policy; implemented | Need identity without enabling unpaid organization creation | Requires OTP email template/SMTP and explicit first-admin provisioning; Microsoft SSO can follow | None |
+| 2026-09-05 | Short sessions with no refresh persistence | Proposed first-release policy; implemented | Cookie-only seed requirement; small first slice | Reauthentication at token expiry, maximum configured cookie age 1h; strict token revocation gate before operational actions | None |
+| 2026-09-05 | Membership administration and initial tenant creation remain operator-only | Proposed first-release policy; implemented | Secure bootstrap before payment/activation exists | Users cannot grant themselves access; no payment verification implied | None |
+| 2026-09-05 | No live infrastructure or legacy database changes in foundation PR | Implementation boundary | No verified dedicated Operis environment | Schema, deployment files and setup are reviewable before live changes | None |

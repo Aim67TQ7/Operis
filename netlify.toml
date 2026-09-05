@@ -1,0 +1,28 @@
+[build]
+command = "npm ci && npm run build"
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "22"
+
+# Add the real /api/* HTTPS backend proxy BEFORE the SPA fallback when deploying.
+# No invented backend URL is committed. API requests deliberately fail closed.
+[[redirects]]
+from = "/api/*"
+to = "/api-unconfigured.json"
+status = 503
+force = true
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[[headers]]
+for = "/*"
+[headers.values]
+X-Content-Type-Options = "nosniff"
+Referrer-Policy = "no-referrer"
+X-Frame-Options = "DENY"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
