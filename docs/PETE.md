@@ -10,7 +10,7 @@ User-provided inspection established Docker Compose v5.3.1, a `hub-caddy` contai
 
 ## DNS prerequisite
 
-The proposed dedicated API hostname is `operis-api.gp3.app`. It has not been confirmed or configured. The build workspace's DNS resolver failed even for the known existing hostname, so this does not establish whether the proposed record exists.
+The user added `operis-api.gp3.app` in Netlify DNS pointing to Pete and verified HTTPS through Caddy. On 2026-09-05 at 18:16:30 UTC, the deployed readiness endpoint returned HTTP 200 with no-store headers after correcting the server's publishable key. This receipt comes from the user's terminal; the build workspace cannot independently resolve the hostname.
 
 Check the hostname's A and AAAA records from the user's Mac. The A record should reach Pete; any AAAA record must also reach this server. Confirm that the hostname is unused before assigning it. DNS provider access and Caddy certificate issuance remain unverified. Do not alter the existing hub hostname or replace Caddy's configuration.
 
@@ -44,7 +44,7 @@ Check provider/schema readiness inside the running container:
 docker compose --env-file deploy/pete/.env -f deploy/pete/compose.yaml exec -T api python -c 'import urllib.request; r=urllib.request.urlopen("http://127.0.0.1:8000/api/health/ready", timeout=15); print(r.status, r.read().decode())'
 ```
 
-Then verify both health endpoints through the actual HTTPS hostname. Successful container liveness alone does not establish Supabase readiness or Caddy routing. Record the source commit and image ID after success. No backend deployment has been executed by this preparation.
+Then verify both health endpoints through the actual HTTPS hostname. Successful container liveness alone does not establish Supabase readiness or Caddy routing. Record the source commit and image ID after success. The initial backend deployment has now been executed by the user on Pete; see the receipt below.
 
 ## Connect the frontend and finish acceptance
 
@@ -59,3 +59,11 @@ For an application rollback, retain the ZODA schema and point the Operis service
 The Compose YAML was parsed locally and reviewed against Docker/Caddy documentation. Docker is absent in the build workspace, so Compose interpolation, image build, resource limits, network discovery and HTTPS startup still require execution on Pete. Existing application source is unchanged by this deployment configuration.
 
 References: [Caddy Docker Proxy](https://github.com/lucaslorentz/caddy-docker-proxy) and [Docker Compose services](https://docs.docker.com/reference/compose-file/services/).
+
+## Initial backend receipt
+
+The user built and started source commit `4db7de238ec797f09b6e29ac90912b6c0889e16a` on Pete. The built image is `operis-api:4db7de238ec797f09b6e29ac90912b6c0889e16a`, with reported image config digest `sha256:5410da337e81258138245d77534fb45598a81e5835eb716ca436a984bbc9c417`. Container `operis-staging-api-1` reports Healthy.
+
+HTTPS liveness returned HTTP 200 via Caddy at 18:11:05 UTC. Initial readiness failed because the saved publishable key did not match ZODA and all three direct Supabase probes returned 401. The user entered the verified ZODA publishable key through a hidden prompt; the environment file was replaced atomically with mode 600 and only the Operis API container was recreated. HTTPS readiness then returned HTTP 200 at 18:16:30 UTC, with `Cache-Control: no-store` and request ID `4923919a-c625-47fd-9b98-c4f765e1b747`.
+
+This verifies the backend's Auth-health and anonymous schema probe from Pete. It does not verify email delivery, user sessions or tenant membership. The original readiness failure was configuration-related; no shared Supabase keys or Auth settings were rotated or changed.

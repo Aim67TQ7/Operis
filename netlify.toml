@@ -5,12 +5,11 @@ publish = "dist"
 [build.environment]
 NODE_VERSION = "22"
 
-# Add the real /api/* HTTPS backend proxy BEFORE the SPA fallback when deploying.
-# No invented backend URL is committed. API requests deliberately fail closed.
+# Same-origin API proxy to the verified Pete backend; keep before SPA fallback.
 [[redirects]]
 from = "/api/*"
-to = "/api-unconfigured.json"
-status = 404
+to = "https://operis-api.gp3.app/api/:splat"
+status = 200
 force = true
 
 [[redirects]]

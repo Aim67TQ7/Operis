@@ -47,3 +47,23 @@ Supabase CLI setup encountered a cancelled network approval. Docker and psql wer
 ## Pete deployment preparation
 
 User-provided terminal output confirms Mac SSH access, Compose v5.3.1, and the existing Caddy container on hub-net. The added Compose YAML parses locally; required settings, image build context and inherited healthcheck were reviewed. Docker remains unavailable in the build workspace, so this is not a Compose runtime or backend deployment claim. DNS lookup failed locally for both the existing hub hostname and the proposed Operis hostname. See PETE.md for the executable deployment sequence and remaining checks.
+
+## Pete live backend receipt
+
+The user successfully built the Docker image from commit `4db7de238ec797f09b6e29ac90912b6c0889e16a` and started `operis-staging-api-1` with Healthy status. User-provided HTTPS responses establish liveness HTTP 200 and, after correcting a mismatched publishable key, readiness HTTP 200 at 2026-09-05 18:16:30 UTC through Caddy, with no-store headers. See PETE.md for the image and request identifiers. The Netlify proxy target is now configured in source; deployment and verification of this new routing are recorded separately.
+
+Netlify deploy `6a9c5d465bf2eddc00dfa917` completed its hosted build and published the new API proxy at 2026-09-05 18:20:07 UTC. The local build command was interrupted by a cancelled network approval; the successful hosted build is the deployment validation for this change.
+
+## Frontend proxy live checks
+
+After deploy `6a9c5d465bf2eddc00dfa917`, direct HTTPS requests to `operis-staging.netlify.app` verified:
+
+| Request | Result | Evidence |
+| --- | --- | --- |
+| GET /api/health/live | 200 | status ok, version 0.1.0 |
+| GET /api/health/ready | 200 | status ready |
+| GET /api/me without a cookie | 401 | Sign in to continue |
+| POST /api/auth/verify, allowed Origin, invalid input | 422 | Validated by the API; provider not called |
+| POST /api/auth/verify, foreign Origin | 403 | Request origin is not allowed |
+
+All five returned JSON with Cache-Control: no-store. These checks establish routing, readiness, unauthenticated access denial and preservation of Origin through Netlify/Caddy. They do not establish successful code delivery, Set-Cookie forwarding, a real session or tenant administration. No sign-in emails were sent by these checks.

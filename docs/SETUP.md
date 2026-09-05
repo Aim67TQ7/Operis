@@ -46,7 +46,7 @@ Build the image from `apps/api`. Dependency hashes are committed in requirements
 docker build -t operis-api:phase-1 apps/api
 ```
 
-Place the API behind HTTPS. Configure Netlify's `/api/*` rewrite to the actual backend `/api/:splat` target **before** the SPA fallback and remove the explicit unconfigured 404 rewrite. Set `OPERIS_APP_ORIGIN` to the exact frontend origin. Preserve Cookie, Set-Cookie, Content-Type and Origin through the proxy. Never cache authenticated `/api` responses. The production session cookie is `__Host-operis_session`, HttpOnly, Secure, SameSite=Strict, Path=/, with no Domain attribute.
+Place the API behind HTTPS. The repository now places Netlify's `/api/*` rewrite to `https://operis-api.gp3.app/api/:splat` **before** the SPA fallback. Verify the active frontend deployment includes that configuration. Set `OPERIS_APP_ORIGIN` to the exact frontend origin. Preserve Cookie, Set-Cookie, Content-Type and Origin through the proxy. Never cache authenticated `/api` responses. The production session cookie is `__Host-operis_session`, HttpOnly, Secure, SameSite=Strict, Path=/, with no Domain attribute.
 
 Origin validation is the CSRF boundary; state changes require exact allowed Origin and JSON. No permissive CORS configuration is used. Do not strip Origin at the proxy. Netlify custom headers protect the static frontend; ensure your backend proxy also preserves the API's no-store headers.
 

@@ -12,7 +12,7 @@ Operis is an operating intelligence layer above existing business systems. This 
 - Postgres membership-based RLS, composite tenant/company foreign keys, and atomic, client-immutable audit records with before/after evidence.
 - API liveness/readiness, request correlation, sanitized structured request logs, bounded OTP attempts, tests and CI.
 
-**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. Sign-in and workspace use still await deployment to the selected Pete server, shared Auth compatibility checks and first-admin provisioning. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
+**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. The Docker backend now runs on Pete and passed its HTTPS readiness check. The frontend API proxy is deployed. Real sign-in and workspace acceptance still await shared Auth compatibility checks and first-admin provisioning. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
 
 ## Layout
 
@@ -76,4 +76,4 @@ API tests use isolated provider responses. Database tests execute the real schem
 
 ## Deployment direction
 
-Netlify serves the frontend and proxies `/api/*` to the Docker FastAPI backend under the same browser origin. Deployment configuration intentionally fails API calls closed until its real proxy target is set. The backend image runs as a non-root user with one worker. Read `docs/SETUP.md` before deploying; infrastructure changes, migrations and live provisioning require an approved target.
+Netlify serves the frontend and proxies `/api/*` to the Docker FastAPI backend under the same browser origin. The Netlify configuration proxies API requests to `https://operis-api.gp3.app`; the backend uses the approved ZODA project. The backend image runs as a non-root user with one worker. Read `docs/SETUP.md` before deploying; infrastructure changes, migrations and live provisioning require an approved target.

@@ -12,10 +12,10 @@ Recorded 2026-09-05 after the user approved staging resources and selected the e
 | Netlify team | n0v8v, slug `aim67tq7` | Approved staging team |
 | Netlify project | `operis-staging`, ID `5dc6fae8-a930-4483-b8a5-37d718aa0bc4` | Created |
 | Frontend origin | [https://operis-staging.netlify.app](https://operis-staging.netlify.app) | HTTPS page and assets return 200 |
-| Netlify deploy | `6a9c195e0e442f20d55397e0` | Ready, published 2026-09-05T13:30:20Z |
-| Backend | Docker FastAPI on Hostinger Pete | User selected host; Mac SSH works; Compose prepared, not deployed |
+| Netlify deploy | `6a9c5d465bf2eddc00dfa917` | Ready, published 2026-09-05T18:20:07Z; API proxy enabled |
+| Backend | Docker FastAPI on Hostinger Pete | Running; user verified HTTPS liveness and readiness HTTP 200 |
 
-[Netlify deployment details](https://app.netlify.com/sites/5dc6fae8-a930-4483-b8a5-37d718aa0bc4/deploys/6a9c195e0e442f20d55397e0).
+[Netlify deployment details](https://app.netlify.com/sites/5dc6fae8-a930-4483-b8a5-37d718aa0bc4/deploys/6a9c5d465bf2eddc00dfa917).
 
 The frontend was deployed from a source upload of `build/phase-1-foundation` with the staging configuration changes. This does not establish automatic GitHub deployment. Netlify labels this the site's production context because it serves the site's primary URL; Operis remains a staging environment, not an accepted production application.
 
@@ -31,14 +31,16 @@ All five tables have RLS enabled. Eight policies were inspected. Anonymous inser
 
 ## Remaining setup
 
-1. Deploy the prepared Docker backend to Pete using [PETE.md](PETE.md). The user verified Caddy on `hub-net`; confirm the proposed API hostname/DNS and supply the ZODA publishable key securely on Pete. No runtime service-role key is needed.
-2. Replace the Netlify `/api/*` placeholder with the actual HTTPS backend proxy and redeploy. Set `OPERIS_APP_ORIGIN=https://operis-staging.netlify.app` on the backend and preserve Origin/cookie headers.
+1. Backend deployment completed on Pete at source commit `4db7de238ec797f09b6e29ac90912b6c0889e16a`. See [PETE.md](PETE.md) for the build and HTTPS readiness receipts.
+2. Netlify published the `/api/*` proxy to `https://operis-api.gp3.app/api/:splat` in deploy `6a9c5d465bf2eddc00dfa917`. Live checks through the frontend origin passed readiness (200), unauthenticated access denial (401), input validation (422), Origin rejection (403) and no-store headers. Successful session cookie forwarding still needs a real sign-in.
 3. Confirm existing ZODA Auth is compatible with code sign-in without changing global email, signup or session settings for other applications. No emails were sent during this setup.
 4. Confirm the initial organization name and verified first-admin account; run the explicit provisioning transaction once. No initial tenant/admin has been created yet.
 5. Complete deployed API readiness, real sign-in, persistence, cross-tenant HTTP tests and browser acceptance from SETUP.md.
 
-Until the backend is configured, `/api/health/ready` returns HTTP 404 with the explicit API-unconfigured JSON response. Frontend routes including `/workspace` return the SPA. No credentials, operational records or demonstration tenants are shipped in the frontend.
+The frontend now routes API requests to the HTTPS Pete backend. The initial placeholder deployment remains available as a historical rollback release. Frontend routes including `/workspace` return the SPA. No credentials, operational records or demonstration tenants are shipped in the frontend.
 
 ## Rollback boundary
 
 Retain this additive schema during application rollback. Do not drop shared schemas, undo unrelated grants, or roll back shared Auth settings. Record an immutable backend image and verify backups before accepting operational writes. The deployed frontend permalink is [this release](https://6a9c195e0e442f20d55397e0--operis-staging.netlify.app).
+
+The proxy deployment permalink is [this release](https://6a9c5d465bf2eddc00dfa917--operis-staging.netlify.app).
