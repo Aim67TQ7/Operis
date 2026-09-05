@@ -10,7 +10,7 @@ NODE_VERSION = "22"
 [[redirects]]
 from = "/api/*"
 to = "/api-unconfigured.json"
-status = 503
+status = 404
 force = true
 
 [[redirects]]

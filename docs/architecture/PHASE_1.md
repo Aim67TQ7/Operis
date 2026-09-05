@@ -1,6 +1,6 @@
 # Phase 1: Operis foundation
 
-Status: first foundation slice implemented and locally tested. Production deployment is not yet verified.
+Status: first foundation slice implemented and tested; ZODA schema applied and staging frontend deployed. Backend hosting and end-to-end acceptance remain pending.
 
 The user authorized starting Operis and deferred discovery/rebuild of existing Lovable templates to Phase 2. This supersedes the seed's requirement to finish legacy-system discovery before construction. The destination is Aim67TQ7/Operis, initially one README on main at c0b7cf6.
 
@@ -30,4 +30,4 @@ Postgres owns tenancy, organization structure, membership, and append-only audit
 
 Tenant provisioning is an explicit operator SQL transaction, separate from customer authentication. Payment activation and entitlement verification must precede opening public onboarding. The first slice does not implement the commercial payment flow.
 
-Deployment follows the seed: Netlify frontend with a same-origin API proxy and Docker FastAPI service. Sites' default Worker/Vinext runtime is not adopted because it conflicts with the requested Vite/Python stack. No infrastructure is provisioned by this change.
+Deployment follows the seed: Netlify frontend with a same-origin API proxy and Docker FastAPI service. Sites' default Worker/Vinext runtime is not adopted because it conflicts with the requested Vite/Python stack. The staging frontend and additive ZODA schema are provisioned; see ../STAGING.md.

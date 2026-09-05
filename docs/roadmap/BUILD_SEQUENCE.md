@@ -7,8 +7,8 @@ This PR starts Phase 1, not all seed Gate 1 capabilities.
 1. Repository, quality gates, application shell and backend health.
 2. Verified-user email code login, cookie session, tenant membership and RLS.
 3. Company/site creation and tenant naming with atomic audit evidence.
-4. Select dedicated development/staging Supabase project, SMTP, frontend origin and backend host.
-5. Generate/review migration from schema.sql using a functioning Supabase CLI; apply only to the approved environment. Run live advisors and the full Supabase integration test gate.
+4. ZODA selected and frontend deployed to operis-staging.netlify.app. Confirm Docker backend host and compatibility with existing shared Auth/SMTP.
+5. Initial schema applied through the migration service as version 20260905132610. Live advisors and eight database-role isolation checks completed; full Auth/PostgREST integration remains a staging gate.
 6. Verify sign-in delivery, cookies behind the proxy, tenant isolation, unauthorized paths and organization creation in staging. Exercise actual browser flows at desktop/mobile sizes.
 7. Complete controlled activation/payment, invitation/admin lifecycle, secret storage and connector registration as further Phase 1 slices before external customer onboarding.
 

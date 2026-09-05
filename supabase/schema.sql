@@ -1,5 +1,5 @@
--- Reviewed initial schema. Convert to a CLI-generated migration before deployment.
--- Applies only to a dedicated Operis database, once. Never run against legacy databases.
+-- Initial additive Operis schema; apply once to the explicitly approved target.
+-- ZODA is approved for staging. Touch only Operis objects; preserve shared Auth configuration.
 begin;
 create schema if not exists operis_private;
 revoke all on schema operis_private from public, anon, authenticated;

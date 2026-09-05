@@ -12,7 +12,7 @@ Operis is an operating intelligence layer above existing business systems. This 
 - Postgres membership-based RLS, composite tenant/company foreign keys, and atomic, client-immutable audit records with before/after evidence.
 - API liveness/readiness, request correlation, sanitized structured request logs, bounded OTP attempts, tests and CI.
 
-**Not live yet.** Real sign-in, persistence and deployment require an approved dedicated Supabase environment and host configuration. No existing database was changed. The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
+**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. Sign-in and workspace use still await the Docker FastAPI host, shared Auth compatibility checks and first-admin provisioning. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
 
 ## Layout
 
@@ -20,8 +20,8 @@ Operis is an operating intelligence layer above existing business systems. This 
 | --- | --- |
 | `apps/web` | User interface; all requests use same-origin `/api` |
 | `apps/api/operis` | Identity gateway, policy checks, organization API |
-| `supabase/schema.sql` | Initial reviewed SQL source, not yet a CLI-generated migration |
-| `supabase/tests` | PostgreSQL RLS and audit tests using PGlite |
+| `supabase/schema.sql` | Reviewed initial SQL; applied to approved ZODA staging |
+| `supabase/tests` | PGlite tests and rollback-only hosted database checks |
 | `scripts/provision-tenant.sql` | Explicit operator bootstrap; no public tenant creation |
 | `docs/architecture/PHASE_1.md` | Scope, interface hierarchy and architecture |
 | `docs/SETUP.md` | Environment setup, sign-in configuration and deployment gates |
@@ -39,7 +39,7 @@ uv sync --frozen
 cp .env.example .env
 ```
 
-Populate `.env` only with the dedicated environment's settings described in `docs/SETUP.md`. Start the API from `apps/api`:
+Populate `.env` only with the approved environment's settings described in `docs/SETUP.md`. Start the API from `apps/api`:
 
 ```bash
 uv run uvicorn operis.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
@@ -71,7 +71,7 @@ uv run ruff format --check operis tests
 uv run pytest -q
 ```
 
-API tests use isolated provider responses. Database tests execute the real schema/policies/triggers in a PostgreSQL WebAssembly engine with a minimal test auth schema. Neither claims successful access to a hosted Supabase project. Test records exist only in test files and never seed the product.
+API tests use isolated provider responses. Database tests execute the real schema/policies/triggers in a PostgreSQL WebAssembly engine with a minimal test auth schema. These local suites do not establish hosted integration. Separately, eight rollback-only checks passed on ZODA under actual database roles; see `docs/VERIFICATION.md`. Test records never seed the product.
 
 ## Deployment direction
 

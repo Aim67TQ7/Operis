@@ -1,6 +1,6 @@
 # Foundation verification
 
-Verified locally on 2026-09-05. No production deployment claim.
+Verified on 2026-09-05. Local foundation checks and hosted staging checks are separated below; this is not full production acceptance.
 
 | Check | Result | What it establishes |
 | --- | --- | --- |
@@ -16,12 +16,30 @@ API tests use `httpx.MockTransport` and a real FastAPI application lifecycle. UI
 
 Two non-failing upstream test-client deprecation warnings occur for Starlette's httpx and AnyIO portal integrations. They do not affect passing assertions. The source and lockfiles preserve the tested versions; migration to the successor interfaces should be reviewed independently.
 
+## Hosted staging verification
+
+The user approved shared ZODA and the Netlify staging site. See [STAGING.md](STAGING.md) for identifiers and migration receipt.
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Initial migration | Applied, version `20260905132610` | Five Operis tables and private helpers only |
+| Live RLS/grants/policies | Passed | RLS on all five tables, eight policies, restricted grants |
+| `supabase/tests/live-boundaries.sql` | Eight checks passed | Actual DB roles, isolation and audit; transaction rolled back |
+| Test cleanup | Passed | All five Operis tables empty afterward |
+| Hosted security advisors | No Operis findings | Does not clear unrelated pre-existing project findings |
+| Netlify build/deploy | Ready | Deploy `6a9c195e0e442f20d55397e0`; no secret matches reported by deploy scan |
+| HTTPS frontend and assets | HTTP 200 | Page title, JS and CSS retrieved successfully |
+| `/workspace` | HTTP 200 | SPA fallback serves frontend |
+| `/api/health/ready` | Expected HTTP 404 JSON | Explicit unconfigured-API boundary; not backend readiness |
+
+`npm run build` and all 15 PGlite database tests were rerun successfully during this staging setup. The earlier 5 web and 17 API tests remain the latest local results for unchanged application source. These live database checks use local JWT claims under database roles; they do not verify Supabase-issued tokens through PostgREST or the FastAPI proxy.
+
 ## Not verified in this environment
 
-- Full Supabase Auth/PostgREST integration, SMTP delivery and hosted RLS advisors.
+- Full Supabase Auth/PostgREST HTTP integration, SMTP delivery and compatibility of shared ZODA email templates.
 - Real browser layout, mobile sizing, keyboard navigation and live end-to-end sign-in.
-- Docker image execution, Netlify routing and deployed health.
+- Docker image execution, deployed FastAPI health and authenticated Netlify proxy behavior.
 - Production backup/restore, proxy limits and scaling policy.
 - Legacy Lovable implementations and their operational source systems (Phase 2).
 
-Supabase CLI setup encountered a cancelled network approval. Docker and psql were absent. No live database was modified. The reviewed `supabase/schema.sql` still needs a CLI-generated migration and staging acceptance before production use.
+Supabase CLI setup encountered a cancelled network approval. Docker and psql were absent. The hosted migration was instead applied successfully through Supabase's migration service. No first tenant/admin was provisioned and no shared Auth configuration was changed.

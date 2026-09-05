@@ -17,7 +17,7 @@ Architecture and first release policies are in ../architecture/PHASE_1.md and ..
 
 ## Blocked / deferred
 
-- No dedicated Operis Supabase project, deployment host, SMTP configuration or production first-admin identity has been selected and verified.
+- Update 2026-09-05: user selected shared ZODA for staging; additive schema applied and Netlify frontend deployed. Docker host, shared Auth compatibility and first-admin identity remain unresolved. See ../STAGING.md.
 - Existing Lovable source, legacy schemas, ERP integrations and deployed behavior remain uninspected and are intentionally Phase 2 work.
 - Docker and psql were unavailable in this build environment. Supabase CLI setup encountered a cancelled network approval; no live schema mutation or migration history operation was attempted. The schema is a reviewed SQL source, not a fabricated CLI migration.
 - Full Supabase-stack integration, container execution, live sign-in and browser/deployment acceptance remain release gates. Local PGlite tests verify SQL behavior but do not replace these gates.
