@@ -55,7 +55,7 @@ test("sign-in uses email/code and cookie requests without storing tokens", async
     await screen.findByLabelText("Email address"),
     "admin@example.com",
   );
-  await user.click(screen.getByRole("button", { name: /Send sign-in code/ }));
+  await user.click(screen.getByRole("button", { name: /Send sign-in link/ }));
   await user.type(await screen.findByLabelText("Sign-in code"), "123456");
   await user.click(screen.getByRole("button", { name: /Enter workspace/ }));
   await screen.findByRole("heading", { name: "Workspace setup" });

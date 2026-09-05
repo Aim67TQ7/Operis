@@ -67,3 +67,8 @@ After deploy `6a9c5d465bf2eddc00dfa917`, direct HTTPS requests to `operis-stagin
 | POST /api/auth/verify, foreign Origin | 403 | Request origin is not allowed |
 
 All five returned JSON with Cache-Control: no-store. These checks establish routing, readiness, unauthenticated access denial and preservation of Origin through Netlify/Caddy. They do not establish successful code delivery, Set-Cookie forwarding, a real session or tenant administration. No sign-in emails were sent by these checks.
+
+
+## PKCE magic-link compatibility change
+
+Implemented server-side email-link request and callback, preserving shared Auth defaults. Local API suite: 20 tests passed, including browser-verifier challenge binding, missing verifier rejection, provider failure cleanup, replay rejection after cookie removal, fixed redirect destination and session token non-disclosure. Provider calls in these tests are mocked; this is not live email acceptance. Backend deployment on Pete and the exact additional Supabase redirect URL remain required before real callback testing.

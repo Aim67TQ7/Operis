@@ -1,6 +1,9 @@
+import base64
 import hashlib
 import json
 import logging
+import re
+import secrets
 import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
@@ -10,7 +13,7 @@ from uuid import UUID, uuid4
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from .config import Settings, get_settings
@@ -185,17 +188,81 @@ def create_app(settings: Settings | None = None):
         digest = hashlib.sha256(email.lower().encode()).hexdigest()
         app.state.limiter.check(f"email:{digest}:{purpose}", 5 if purpose == "request" else 10)
 
+    pkce_cookie = "__Host-operis_pkce" if settings.environment == "production" else "operis_pkce"
+
+    @app.get("/api/auth/callback")
+    async def callback(request: Request, gw: GW):
+        code = request.query_params.get("code", "")
+        verifier = request.cookies.get(pkce_cookie, "")
+        response = HTMLResponse(
+            "<h1>Sign-in could not finish</h1><p>Request a new link from "
+            '<a href="/">Operis</a> and open it in the same browser.</p>',
+            status_code=400,
+        )
+        if 1 <= len(code) <= 2048 and re.fullmatch(r"[A-Za-z0-9_-]{64}", verifier):
+            try:
+                result = await gw.request(
+                    "POST",
+                    "/auth/v1/token",
+                    params={"grant_type": "pkce"},
+                    payload={"auth_code": code, "code_verifier": verifier},
+                )
+                token = result.get("access_token")
+                if token:
+                    user = await gw.request("GET", "/auth/v1/user", token=token)
+                    if user.get("id") and user.get("email_confirmed_at") and not user.get("is_anonymous"):
+                        response = RedirectResponse("/", status_code=303)
+                        response.set_cookie(
+                            settings.cookie_name,
+                            token,
+                            httponly=True,
+                            secure=settings.environment == "production",
+                            samesite="strict",
+                            path="/",
+                            max_age=min(settings.session_seconds, int(result.get("expires_in", 3600))),
+                        )
+            except HTTPException:
+                pass
+        response.delete_cookie(
+            pkce_cookie, path="/", httponly=True, secure=settings.environment == "production", samesite="lax"
+        )
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        )
+        return response
+
     @app.post("/api/auth/code", status_code=202)
-    async def send_code(data: EmailInput, request: Request, gw: GW):
+    async def send_code(data: EmailInput, request: Request, response: Response, gw: GW):
         limit(request, data.email, "request")
+        verifier = secrets.token_urlsafe(48)
+        challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
         try:
             await gw.request(
-                "POST", "/auth/v1/otp", payload={"email": data.email.lower(), "create_user": False}
+                "POST",
+                "/auth/v1/otp",
+                params={"redirect_to": settings.app_origin.rstrip("/") + "/api/auth/callback"},
+                payload={
+                    "email": data.email.lower(),
+                    "create_user": False,
+                    "code_challenge": challenge,
+                    "code_challenge_method": "s256",
+                },
             )
         except HTTPException as e:
             if e.status_code not in {401, 403}:
                 raise
-        return {"message": "If this email has access, a sign-in code will arrive shortly."}
+        response.set_cookie(
+            pkce_cookie,
+            verifier,
+            httponly=True,
+            secure=settings.environment == "production",
+            samesite="lax",
+            path="/",
+            max_age=600,
+        )
+        return {
+            "message": "If this email has access, a sign-in link will arrive shortly. Open it in this browser."
+        }
 
     @app.post("/api/auth/verify")
     async def verify(data: VerifyInput, request: Request, response: Response, gw: GW):

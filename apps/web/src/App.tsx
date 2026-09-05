@@ -123,7 +123,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
           <h2>{sent ? "Check your email" : "Sign in to Operis"}</h2>
           <p>
             {sent
-              ? "If your email has access, you’ll receive a sign-in code. Enter it below."
+              ? "Open the sign-in link in your email using this same browser. If the email includes a code instead, enter it below."
               : "Use the email associated with your organization."}
           </p>
           {error && <Notice>{error}</Notice>}
@@ -160,7 +160,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
               ? "Please wait…"
               : sent
                 ? "Enter workspace"
-                : "Send sign-in code"}
+                : "Send sign-in link"}
             <span aria-hidden="true">→</span>
           </button>
           {sent && (
@@ -174,7 +174,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
                 setError("");
               }}
             >
-              Use another email or request a new code
+              Use another email or request a new link
             </button>
           )}
           <p className="login-note">

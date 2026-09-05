@@ -35,7 +35,7 @@ def harness():
                 200,
                 json={"id": USER, "email": "admin@example.com", "email_confirmed_at": "2026-01-01T00:00:00Z"},
             )
-        if path == "/auth/v1/verify":
+        if path in {"/auth/v1/verify", "/auth/v1/token"}:
             return httpx.Response(
                 200,
                 json={
@@ -223,3 +223,53 @@ def test_html_form_post_is_rejected(harness):
         client.post("/api/auth/code", data={"email": "admin@example.com"}, headers=HEADERS).status_code == 415
     )
     assert calls == []
+
+
+def test_magic_link_is_browser_bound_and_server_exchanged(harness):
+    import base64
+    import hashlib
+
+    client, calls, _ = harness
+    client.cookies.clear()
+    sent = client.post("/api/auth/code", json={"email": "admin@example.com"}, headers=HEADERS)
+    verifier = client.cookies.get("__Host-operis_pkce")
+    payload = json.loads(calls[-1].content)
+    assert payload["code_challenge"] == base64.urlsafe_b64encode(
+        hashlib.sha256(verifier.encode()).digest()
+    ).decode().rstrip("=")
+    assert payload["code_challenge_method"] == "s256"
+    assert calls[-1].url.params["redirect_to"] == "https://operis.example/api/auth/callback"
+    assert "HttpOnly" in sent.headers["set-cookie"] and "SameSite=lax" in sent.headers["set-cookie"]
+    result = client.get(
+        "/api/auth/callback?code=one-time-code&next=https://evil.example", follow_redirects=False
+    )
+    assert result.status_code == 303 and result.headers["location"] == "/"
+    exchange = calls[-2]
+    assert exchange.url.params["grant_type"] == "pkce"
+    assert json.loads(exchange.content) == {"auth_code": "one-time-code", "code_verifier": verifier}
+    assert client.cookies.get("__Host-operis_pkce") is None
+    assert client.cookies.get("__Host-operis_session") == "private-test-access-token"
+    assert "private-test" not in result.text
+    assert result.headers["cache-control"] == "no-store"
+    assert client.get("/api/auth/callback?code=one-time-code", follow_redirects=False).status_code == 400
+
+
+def test_callback_without_browser_verifier_never_calls_provider(harness):
+    client, calls, _ = harness
+    client.cookies.clear()
+    response = client.get("/api/auth/callback?code=private-code&error_description=private-error")
+    assert response.status_code == 400
+    assert "private" not in response.text
+    assert calls == []
+
+
+def test_callback_provider_failure_clears_verifier_without_session(harness):
+    client, calls, behavior = harness
+    client.cookies.clear()
+    client.post("/api/auth/code", json={"email": "admin@example.com"}, headers=HEADERS)
+    behavior["failure"] = 400
+    response = client.get("/api/auth/callback?code=expired", follow_redirects=False)
+    assert response.status_code == 400
+    assert client.cookies.get("__Host-operis_pkce") is None
+    assert client.cookies.get("__Host-operis_session") is None
+    assert "sensitive" not in response.text
