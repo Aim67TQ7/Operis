@@ -34,7 +34,7 @@ All five tables have RLS enabled. Eight policies were inspected. Anonymous inser
 1. Backend deployment completed on Pete at source commit `4db7de238ec797f09b6e29ac90912b6c0889e16a`. See [PETE.md](PETE.md) for the build and HTTPS readiness receipts.
 2. Netlify published the `/api/*` proxy to `https://operis-api.gp3.app/api/:splat` in deploy `6a9c5d465bf2eddc00dfa917`. Live checks through the frontend origin passed readiness (200), unauthenticated access denial (401), input validation (422), Origin rejection (403) and no-store headers. Successful session cookie forwarding still needs a real sign-in.
 3. Confirm existing ZODA Auth is compatible with code sign-in without changing global email, signup or session settings for other applications. No emails were sent during this setup.
-4. Confirm the initial organization name and verified first-admin account; run the explicit provisioning transaction once. No initial tenant/admin has been created yet.
+4. The user selected **Magnet Applications** as the first organization. Register and verify the designated first-admin Auth account, then run the explicit provisioning transaction once. No initial tenant/admin has been created yet.
 5. Complete deployed API readiness, real sign-in, persistence, cross-tenant HTTP tests and browser acceptance from SETUP.md.
 
 The frontend now routes API requests to the HTTPS Pete backend. The initial placeholder deployment remains available as a historical rollback release. Frontend routes including `/workspace` return the SPA. No credentials, operational records or demonstration tenants are shipped in the frontend.

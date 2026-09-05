@@ -4,7 +4,7 @@ These do not block source implementation. Do not reopen Lovable discovery as a P
 
 | Question | Why it matters | Default until answered | Decision deadline |
 | --- | --- | --- | --- |
-| Who is the first organization administrator and what is the initial organization name? | Explicit bootstrap ownership | No seeded customer or admin | Before tenant provisioning |
+| Has the designated first administrator completed Supabase Auth registration and email verification? | Bootstrap requires a verified non-anonymous account | Organization name is Magnet Applications; no tenant/admin provisioned yet | Before the bootstrap transaction |
 | Does shared ZODA Auth deliver a code compatible with Operis, and what session/SSO policy is approved? | Enables real code delivery and identity rollout | Existing-user email OTP; reauthentication at expiry; no SSO claims | Before staging sign-in acceptance |
 | What payment and activation implementation is approved? | Required before external customer signup | Operator-only tenant creation, no payment entitlement implied | Before commercial onboarding |
 | Which Lovable projects are authoritative and actively used? | Sets module extraction and requirements | Screenshots establish project names only | Phase 2 discovery |

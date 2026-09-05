@@ -1,6 +1,7 @@
 -- Operator-only; run with psql variables tenant_name and admin_user_id.
 -- admin_user_id must identify an already verified, non-anonymous Supabase Auth user.
--- Do not run in a legacy project. This is not payment verification.
+-- Run only on the approved Operis target (shared ZODA for staging).
+-- Touch only Operis records; preserve shared Auth. This is not payment verification.
 \set ON_ERROR_STOP on
 begin;
 create temporary table provisioning_input as
