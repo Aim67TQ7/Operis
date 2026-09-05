@@ -69,3 +69,10 @@ The repository's tests do not substitute for this live acceptance gate. See `VER
 ## Operational limits of this slice
 
 Organization lists are capped at 200 records and activity at the latest 200 events. There are no operational records, document uploads, connector secrets, agents, external writes, financial actions or schedules. Structured application request logs record correlation, route template, method, status and duration without request bodies or token values. Supabase owns authentication event logs; unified tenant authentication audit presentation is deferred.
+
+
+## Password sign-in
+
+Password login is available alongside email links. After signing in, expand **Account password**, enter and confirm a password of at least 12 characters, and save. This updates the same ZODA Auth identity used by other connected applications. Supabase's existing password and reauthentication policies still apply; no project settings are changed. For a forgotten password, use an email link to sign in and return to Account password. If the provider requires a fresh session, sign out and use a fresh email link first.
+
+The backend uses the password grant and the current caller's authenticated update-user endpoint. Passwords are not normalized, logged, returned in JSON, or persisted by Operis. Login attempts are rate-limited; password updates require the verified session, allowed Origin and JSON. The existing tenant membership checks remain unchanged. Live password entry is performed by the user; deployment and an actual password sign-in remain acceptance gates.

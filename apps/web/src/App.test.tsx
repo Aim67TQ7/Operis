@@ -165,3 +165,22 @@ test("verified users without membership see no tenant data or creation shortcut"
   ).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Add company" })).toBeNull();
 });
+
+test("password settings require matching confirmation and clear saved fields", async () => {
+  const fetcher = vi.fn(async (path: string) => response(path === "/api/me" ? identity : path === "/api/auth/password" ? {updated: true} : workspace));
+  vi.stubGlobal("fetch", fetcher);
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByRole("heading", {name: "Workspace setup"});
+  await user.click(screen.getByText("Account password"));
+  await user.type(screen.getByLabelText("New password"), "test-password-123");
+  await user.type(screen.getByLabelText("Confirm new password"), "test-password-456");
+  await user.click(screen.getByRole("button", {name: "Save shared account password"}));
+  expect(await screen.findByText("Passwords do not match.")).toBeTruthy();
+  expect(fetcher.mock.calls.some(([path]) => path === "/api/auth/password")).toBe(false);
+  await user.clear(screen.getByLabelText("Confirm new password"));
+  await user.type(screen.getByLabelText("Confirm new password"), "test-password-123");
+  await user.click(screen.getByRole("button", {name: "Save shared account password"}));
+  expect(await screen.findByText(/Password saved/)).toBeTruthy();
+  expect((screen.getByLabelText("New password") as HTMLInputElement).value).toBe("");
+});

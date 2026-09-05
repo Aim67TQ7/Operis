@@ -38,6 +38,17 @@ class VerifyInput(EmailInput):
     code: str = Field(pattern=r"^\d{6,10}$")
 
 
+class PasswordInput(EmailInput):
+    # Never strip or normalize passwords, including leading/trailing spaces.
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
+    password: str = Field(min_length=1, max_length=256, repr=False)
+
+
+class SetPasswordInput(Input):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
+    password: str = Field(min_length=12, max_length=256, repr=False)
+
+
 class TenantInput(Input):
     name: str = Field(min_length=2, max_length=100)
 
@@ -285,6 +296,51 @@ def create_app(settings: Settings | None = None):
             max_age=min(settings.session_seconds, int(result.get("expires_in", 3600))),
         )
         return {"authenticated": True}
+
+    @app.post("/api/auth/password")
+    async def password_signin(data: PasswordInput, request: Request, response: Response, gw: GW):
+        limit(request, data.email, "password")
+        try:
+            result = await gw.request(
+                "POST",
+                "/auth/v1/token",
+                params={"grant_type": "password"},
+                payload={"email": data.email.lower(), "password": data.password},
+            )
+        except HTTPException as exc:
+            if exc.status_code in {401, 403}:
+                raise HTTPException(401, "Email or password is incorrect.") from None
+            raise
+        token = result.get("access_token")
+        if not token:
+            raise HTTPException(401, "Email or password is incorrect.")
+        user = await gw.request("GET", "/auth/v1/user", token=token)
+        if not user.get("id") or not user.get("email_confirmed_at") or user.get("is_anonymous"):
+            raise HTTPException(401, "A verified email identity is required.")
+        response.set_cookie(
+            settings.cookie_name,
+            token,
+            httponly=True,
+            secure=settings.environment == "production",
+            samesite="strict",
+            path="/",
+            max_age=min(settings.session_seconds, int(result.get("expires_in", 3600))),
+        )
+        return {"authenticated": True}
+
+    @app.put("/api/auth/password")
+    async def set_password(data: SetPasswordInput, request: Request, user: User, gw: GW):
+        limit(request, user["email"], "set-password")
+        try:
+            await gw.request("PUT", "/auth/v1/user", token=user["token"], payload={"password": data.password})
+        except HTTPException as exc:
+            if exc.status_code in {401, 403}:
+                raise HTTPException(
+                    400,
+                    "Password could not be updated. Sign in with a fresh email link and try a different password that meets your account policy.",
+                ) from None
+            raise
+        return {"updated": True}
 
     @app.post("/api/auth/logout")
     async def logout(request: Request, response: Response, gw: GW):

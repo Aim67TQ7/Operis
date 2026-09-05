@@ -72,3 +72,8 @@ All five returned JSON with Cache-Control: no-store. These checks establish rout
 ## PKCE magic-link compatibility change
 
 Implemented server-side email-link request and callback, preserving shared Auth defaults. Local API suite: 20 tests passed, including browser-verifier challenge binding, missing verifier rejection, provider failure cleanup, replay rejection after cookie removal, fixed redirect destination and session token non-disclosure. Provider calls in these tests are mocked; this is not live email acceptance. Backend deployment on Pete and the exact additional Supabase redirect URL remain required before real callback testing.
+
+
+## Password authentication addition
+
+24 API tests pass, including password grant cookie isolation, exact password preservation, authenticated self-only updates, Origin rejection, generic failure messages and rate limits. Frontend password confirmation/clearing is tested alongside the existing UI suite. Frontend build and API lint pass. Provider responses are mocked; no real account password was set during these checks.

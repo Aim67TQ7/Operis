@@ -273,3 +273,72 @@ def test_callback_provider_failure_clears_verifier_without_session(harness):
     assert client.cookies.get("__Host-operis_pkce") is None
     assert client.cookies.get("__Host-operis_session") is None
     assert "sensitive" not in response.text
+
+
+def test_password_login_keeps_tokens_private_and_preserves_spaces(harness):
+    client, calls, _ = harness
+    client.cookies.clear()
+    response = client.post(
+        "/api/auth/password",
+        headers=HEADERS,
+        json={"email": "admin@example.com", "password": "  example password  "},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": True}
+    assert json.loads(calls[0].content)["password"] == "  example password  "
+    assert calls[0].url.params["grant_type"] == "password"
+    assert "HttpOnly" in response.headers["set-cookie"]
+    assert "SameSite=strict" in response.headers["set-cookie"]
+    assert "Secure" in response.headers["set-cookie"]
+    assert "private-test" not in response.text
+
+
+def test_password_update_requires_session_and_origin(harness):
+    client, calls, _ = harness
+    assert client.put("/api/auth/password", json={"password": "long-test-password"}).status_code == 403
+    client.cookies.clear()
+    assert (
+        client.put("/api/auth/password", headers=HEADERS, json={"password": "long-test-password"}).status_code
+        == 401
+    )
+    assert calls == []
+
+
+def test_password_update_targets_only_current_user(harness):
+    client, calls, _ = harness
+    response = client.put("/api/auth/password", headers=HEADERS, json={"password": "  long-test-password  "})
+    assert response.json() == {"updated": True}
+    assert calls[-1].method == "PUT"
+    assert calls[-1].url.path == "/auth/v1/user"
+    assert calls[-1].headers["authorization"] == "Bearer user-access-token"
+    assert json.loads(calls[-1].content) == {"password": "  long-test-password  "}
+    assert "password" not in response.text
+    assert (
+        client.put(
+            "/api/auth/password", headers=HEADERS, json={"password": "long-test-password", "user_id": USER}
+        ).status_code
+        == 422
+    )
+
+
+def test_password_rejections_are_redacted_and_rate_limited(harness):
+    client, calls, behavior = harness
+    client.cookies.clear()
+    behavior["failure"] = 400
+    for _ in range(10):
+        r = client.post(
+            "/api/auth/password",
+            headers=HEADERS,
+            json={"email": "admin@example.com", "password": "private-password"},
+        )
+        assert r.status_code == 401
+        assert "private-password" not in r.text and "sensitive" not in r.text
+    assert (
+        client.post(
+            "/api/auth/password",
+            headers=HEADERS,
+            json={"email": "admin@example.com", "password": "private-password"},
+        ).status_code
+        == 429
+    )
+    assert client.cookies.get("__Host-operis_session") is None

@@ -74,6 +74,8 @@ function Empty({ title, children }: { title: string; children: ReactNode }) {
 function SignIn({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [usePassword, setUsePassword] = useState(false);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -82,7 +84,10 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
     setBusy(true);
     setError("");
     try {
-      if (sent) {
+      if (usePassword) {
+        await api("/auth/password", {method: "POST", body: JSON.stringify({email, password})});
+        onSuccess();
+      } else if (sent) {
         await api("/auth/verify", {
           method: "POST",
           body: JSON.stringify({ email, code }),
@@ -99,6 +104,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
     } catch (e) {
       setError(errorText(e));
     } finally {
+      setPassword("");
       setBusy(false);
     }
   }
@@ -139,6 +145,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
+          {usePassword && <label>Password<input type="password" autoComplete="current-password" required maxLength={256} value={password} onChange={(e) => setPassword(e.target.value)} /></label>}
           {sent && (
             <label>
               Sign-in code
@@ -158,7 +165,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
           <button className="primary" disabled={busy}>
             {busy
               ? "Please wait…"
-              : sent
+              : usePassword ? "Sign in with password" : sent
                 ? "Enter workspace"
                 : "Send sign-in link"}
             <span aria-hidden="true">→</span>
@@ -177,6 +184,9 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
               Use another email or request a new link
             </button>
           )}
+          <button type="button" className="text-button" disabled={busy} onClick={() => {setUsePassword(!usePassword); setSent(false); setCode(""); setPassword(""); setError("");}}>
+            {usePassword ? "Forgot password? Sign in with an email link" : "Use a password instead"}
+          </button>
           <p className="login-note">
             Access is managed by your organization administrator.
           </p>
@@ -501,6 +511,35 @@ function Organization({
   );
 }
 
+function PasswordSettings() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  async function save(e: FormEvent) {
+    e.preventDefault(); setError(""); setDone(false);
+    if (password !== confirm) {setError("Passwords do not match."); return;}
+    setBusy(true);
+    try {
+      await api("/auth/password", {method: "PUT", body: JSON.stringify({password})});
+      setDone(true);
+    } catch (e) {setError(errorText(e));}
+    finally {setBusy(false); setPassword(""); setConfirm("");}
+  }
+  return <details className="panel"><summary>Account password</summary>
+    <p>Set or change your shared ZODA account password. This also changes the password used by other apps connected to this account.</p>
+    <p>Use at least 12 characters. If you forget it, sign in with an email link and return here.</p>
+    {error && <Notice>{error}</Notice>}
+    {done && <Notice kind="success">Password saved. You can now sign in with your email and password.</Notice>}
+    <form className="login-form" onSubmit={save}>
+      <label>New password<input type="password" autoComplete="new-password" required minLength={12} maxLength={256} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+      <label>Confirm new password<input type="password" autoComplete="new-password" required minLength={12} maxLength={256} value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>
+      <button disabled={busy}>{busy ? "Saving…" : "Save shared account password"}</button>
+    </form>
+  </details>;
+}
+
 export function App() {
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [tenantId, setTenantId] = useState("");
@@ -722,6 +761,7 @@ export function App() {
           </div>
           {error && <Notice>{error}</Notice>}
           {success && <Notice kind="success">{success}</Notice>}
+          <PasswordSettings />
           {!tenant ? (
             <section className="panel">
               <Empty title="Your account is verified">
