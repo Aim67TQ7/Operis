@@ -12,7 +12,7 @@ Operis is an operating intelligence layer above existing business systems. This 
 - Postgres membership-based RLS, composite tenant/company foreign keys, and atomic, client-immutable audit records with before/after evidence.
 - API liveness/readiness, request correlation, sanitized structured request logs, bounded OTP attempts, tests and CI.
 
-**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. Sign-in and workspace use still await the Docker FastAPI host, shared Auth compatibility checks and first-admin provisioning. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
+**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. Sign-in and workspace use still await deployment to the selected Pete server, shared Auth compatibility checks and first-admin provisioning. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
 
 ## Layout
 
@@ -25,6 +25,7 @@ Operis is an operating intelligence layer above existing business systems. This 
 | `scripts/provision-tenant.sql` | Explicit operator bootstrap; no public tenant creation |
 | `docs/architecture/PHASE_1.md` | Scope, interface hierarchy and architecture |
 | `docs/SETUP.md` | Environment setup, sign-in configuration and deployment gates |
+| `docs/PETE.md` | Prepared Docker deployment using Pete’s existing Caddy network |
 | `docs/VERIFICATION.md` | Executed checks and limitations |
 | `docs/roadmap/BUILD_SEQUENCE.md` | Foundation rollout and Phase 2 sequence |
 

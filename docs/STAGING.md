@@ -13,7 +13,7 @@ Recorded 2026-09-05 after the user approved staging resources and selected the e
 | Netlify project | `operis-staging`, ID `5dc6fae8-a930-4483-b8a5-37d718aa0bc4` | Created |
 | Frontend origin | [https://operis-staging.netlify.app](https://operis-staging.netlify.app) | HTTPS page and assets return 200 |
 | Netlify deploy | `6a9c195e0e442f20d55397e0` | Ready, published 2026-09-05T13:30:20Z |
-| Backend | Docker FastAPI | Host/access not selected; not deployed |
+| Backend | Docker FastAPI on Hostinger Pete | User selected host; Mac SSH works; Compose prepared, not deployed |
 
 [Netlify deployment details](https://app.netlify.com/sites/5dc6fae8-a930-4483-b8a5-37d718aa0bc4/deploys/6a9c195e0e442f20d55397e0).
 
@@ -31,7 +31,7 @@ All five tables have RLS enabled. Eight policies were inspected. Anonymous inser
 
 ## Remaining setup
 
-1. Select the Docker backend host and provide its approved deployment access. Configure production environment values from SETUP.md, with the ZODA publishable key supplied securely to that host. No runtime service-role key is needed.
+1. Deploy the prepared Docker backend to Pete using [PETE.md](PETE.md). The user verified Caddy on `hub-net`; confirm the proposed API hostname/DNS and supply the ZODA publishable key securely on Pete. No runtime service-role key is needed.
 2. Replace the Netlify `/api/*` placeholder with the actual HTTPS backend proxy and redeploy. Set `OPERIS_APP_ORIGIN=https://operis-staging.netlify.app` on the backend and preserve Origin/cookie headers.
 3. Confirm existing ZODA Auth is compatible with code sign-in without changing global email, signup or session settings for other applications. No emails were sent during this setup.
 4. Confirm the initial organization name and verified first-admin account; run the explicit provisioning transaction once. No initial tenant/admin has been created yet.
