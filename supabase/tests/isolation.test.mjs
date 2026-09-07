@@ -216,3 +216,103 @@ test("removing membership immediately removes access", async () => {
     await db.exec("rollback");
   }
 });
+
+// Commit writes, then read in a separate authenticated transaction. This is
+// persisted PostgreSQL evidence, unlike a mock response or same-transaction echo.
+test("company and site persist with complete actor and request audit evidence", async () => {
+  let company, site;
+  await db.exec("begin");
+  try {
+    await db.query("select set_config('request.jwt.claim.sub',$1,true)", [
+      admin,
+    ]);
+    await db.exec("set local role authenticated");
+    await db.query("select set_config('request.headers',$1,true)", [
+      JSON.stringify({ "x-request-id": "persist-company" }),
+    ]);
+    company = (
+      await db.query(
+        "insert into operis_companies(tenant_id,code,name) values ($1,'PERSIST','Persisted company') returning *",
+        [a],
+      )
+    ).rows[0];
+    await db.query("select set_config('request.headers',$1,true)", [
+      JSON.stringify({ "x-request-id": "persist-site" }),
+    ]);
+    site = (
+      await db.query(
+        "insert into operis_sites(tenant_id,company_id,code,name) values ($1,$2,'PERSIST','Persisted site') returning *",
+        [a, company.id],
+      )
+    ).rows[0];
+    await db.exec("commit");
+  } catch (error) {
+    await db.exec("rollback");
+    throw error;
+  }
+  await asUser(admin, async () => {
+    for (const [table, row, request] of [
+      ["operis_companies", company, "persist-company"],
+      ["operis_sites", site, "persist-site"],
+    ]) {
+      assert.deepEqual(
+        (await db.query(`select * from ${table} where id=$1`, [row.id])).rows,
+        [row],
+      );
+      const events = (
+        await db.query("select * from operis_audit_events where record_id=$1", [
+          row.id,
+        ])
+      ).rows;
+      assert.equal(events.length, 1);
+      const event = events[0];
+      assert.equal(event.tenant_id, a);
+      assert.equal(event.actor_id, admin);
+      assert.equal(event.action, "INSERT");
+      assert.equal(event.table_name, table);
+      assert.equal(event.before, null);
+      assert.deepEqual(
+        {
+          ...event.after,
+          created_at: new Date(event.after.created_at).toISOString(),
+        },
+        JSON.parse(JSON.stringify(row)),
+      );
+      assert.equal(event.request_id, request);
+      assert.ok(event.created_at);
+    }
+  });
+  await asUser(outsider, async () => {
+    assert.equal(
+      (await db.query("select * from operis_sites where id=$1", [site.id])).rows
+        .length,
+      0,
+    );
+    assert.equal(
+      (
+        await db.query("select * from operis_audit_events where record_id=$1", [
+          site.id,
+        ])
+      ).rows.length,
+      0,
+    );
+  });
+});
+
+test("viewer cannot create sites or leave audit evidence for rejected writes", async () => {
+  const before = (await db.query("select count(*) from operis_audit_events"))
+    .rows;
+  await assert.rejects(
+    asUser(viewer, () =>
+      db.query(
+        "insert into operis_sites(tenant_id,company_id,code,name) values ($1,$2,'DENIED','Denied site')",
+        [a, companyB],
+      ),
+    ),
+    /row-level security/,
+  );
+  assert.deepEqual(
+    (await db.query("select count(*) from operis_audit_events")).rows,
+    before,
+  );
+});

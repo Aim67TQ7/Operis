@@ -1,6 +1,35 @@
 # Foundation verification
 
-Verified on 2026-09-05. Local foundation checks and hosted staging checks are separated below; this is not full production acceptance.
+Latest acceptance work: 2026-09-07. The current matrix below supersedes older pending statements; dated receipts later in this file are historical evidence. This is not full production acceptance.
+
+## Review-readiness acceptance, 2026-09-07
+
+PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy → Docker FastAPI on Pete → caller-JWT PostgREST/RLS architecture is unchanged. No schema migration, shared Auth setting, account credential or membership was changed.
+
+| Acceptance | Result | Evidence / limitation |
+| --- | --- | --- |
+| Local API authorization and auth | 43 passed | Every company/site/rename route denies nonmembers (404), viewers/operators (403) before data writes; viewer workspace reads are scoped; lost membership is rechecked. Provider responses are mocked. |
+| Local PostgreSQL boundaries | 17 passed | Real PGlite schema/policies/triggers: committed company/site rows survive a separate transaction with exact actor/before/after/request audit evidence; viewer site denial, escalation and audit tamper checks pass. |
+| Local UI | 12 passed | Site save/read-back after remount, audit details, tenant switching, logout, expiry, expired-code recovery and successful-write/failed-refresh handling. JSDOM and isolated responses; not live browser evidence. |
+| Build and static checks | Passed | Production TypeScript/Vite build; Ruff lint/format; frontend format; whitespace checks. Locked dependencies unchanged. |
+| Live company/site persistence | Passed | Chrome administrator created `PR1-20260907` company and `PR1-SITE` child site; both visible with their relationship after a full page reload. These labeled staging acceptance records and their audit history are intentionally retained. |
+| Live company/site audit | Passed | Expanded both events in Activity. Database read-back independently confirms INSERT, administrator actor, null before, exact `after = to_jsonb(row)`, and request correlation. Receipts below. |
+| Expired browser session write | Passed on previously deployed source | A stale session returned sign-in-required and removed the workspace UI; read-back confirmed zero acceptance rows before the successful fresh-session retry. This is session expiry, not a delivered expired magic-link test. |
+| Authenticated viewer/cross-tenant HTTP | Pending | Staging has one tenant, one admin membership and zero viewer memberships. No unrelated Auth account was assigned access. Local policy/API tests do not substitute for live JWT/HTTP acceptance. |
+| Live responsive UI and keyboard | Passed for exercised paths | Desktop 1440×900 and mobile 390×844: Organization fields fit; page width remains 390; Activity table scrolls within its container (707 content / 356 visible pixels). Both audit evidence panels opened, including Tab/Enter keyboard activation. Connections correctly shows not enabled. Viewport override reset afterward. Multi-tenant browser switching is still pending its fixture. |
+| Browser security inspection | Pending | Successful refresh establishes browser session forwarding. Detailed HttpOnly/Storage/Set-Cookie inspection has not been performed in the live browser. Cookie flags and token-free JSON are covered locally. |
+| Live delivered expired-link and replay | Pending | Local callback tests cover expired/provider-error/missing-verifier/replay recovery. A newly delivered expired link has not been exercised. |
+| Live logout after fix | Pending deployment | Fix always clears session and pending PKCE cookies, including provider outages, and reports unconfirmed remote revocation. The UI clears private state and displays that limitation. Local tests cover provider success/401/403/500 and next-request 401. |
+
+Audit receipts (UTC; account and tenant identifiers omitted):
+
+- Company INSERT: `2026-09-07 09:13:15.855625+00`, request `39ec4e8e-9366-492c-8a70-480079c9f25f`.
+- Site INSERT: `2026-09-07 09:13:45.100004+00`, request `0cca8c85-09c4-45e0-9376-0368703f092a`.
+- The first rejected write had request `e7ba0307-3465-4816-b930-e9f3f6900883`; no acceptance company was committed.
+
+`python scripts/verify-staging.py --help` and static checks validate the new credential-prompted live HTTP runner. It has **not** run authenticated against staging. It requires an explicitly approved existing admin/viewer arrangement across two tenants; it creates one labeled company/site, preserves audit evidence, tests FastAPI and direct PostgREST denials, and signs out its own sessions. See SETUP.md. A successful runner result covers only its stated HTTP scope.
+
+## Historical foundation baseline (2026-09-05)
 
 | Check | Result | What it establishes |
 | --- | --- | --- |

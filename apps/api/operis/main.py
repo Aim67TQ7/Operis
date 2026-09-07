@@ -345,12 +345,13 @@ def create_app(settings: Settings | None = None):
     @app.post("/api/auth/logout")
     async def logout(request: Request, response: Response, gw: GW):
         token = request.cookies.get(settings.cookie_name)
+        revoked = True
         if token:
             try:
                 await gw.request("POST", "/auth/v1/logout", token=token, params={"scope": "local"})
             except HTTPException as e:
                 if e.status_code not in {401, 403}:
-                    raise
+                    revoked = False
         response.delete_cookie(
             settings.cookie_name,
             path="/",
@@ -358,7 +359,12 @@ def create_app(settings: Settings | None = None):
             httponly=True,
             samesite="strict",
         )
-        return {"authenticated": False}
+        response.delete_cookie(
+            pkce_cookie, path="/", httponly=True, secure=settings.environment == "production", samesite="lax"
+        )
+        # Local sign-out must work during provider outages. Do not claim remote
+        # revocation succeeded; access tokens remain subject to provider expiry.
+        return {"authenticated": False, "provider_revoked": revoked}
 
     @app.get("/api/me")
     async def me(user: User, gw: GW):

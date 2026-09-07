@@ -342,3 +342,120 @@ def test_password_rejections_are_redacted_and_rate_limited(harness):
         == 429
     )
     assert client.cookies.get("__Host-operis_session") is None
+
+
+@pytest.mark.parametrize(
+    "member,role,status", [(False, "admin", 404), (True, "viewer", 403), (True, "operator", 403)]
+)
+@pytest.mark.parametrize(
+    "method,suffix,payload",
+    [
+        ("PATCH", "", {"name": "Denied rename"}),
+        ("POST", "/companies", {"code": "DENIED", "name": "Denied company"}),
+        ("POST", "/sites", {"code": "DENIED", "name": "Denied site", "company_id": TENANT}),
+    ],
+)
+def test_all_structural_writes_enforce_membership_before_data(
+    harness, member, role, status, method, suffix, payload
+):
+    client, calls, behavior = harness
+    behavior.update(member=member, role=role)
+    response = client.request(method, f"/api/tenants/{TENANT}{suffix}", json=payload, headers=HEADERS)
+    assert response.status_code == status
+    assert response.headers["cache-control"] == "no-store"
+    assert [r.url.path for r in calls] == ["/auth/v1/user", "/rest/v1/operis_memberships"]
+    assert all(r.headers["authorization"] == "Bearer user-access-token" for r in calls)
+
+
+def test_viewer_can_read_workspace_with_scoped_queries(harness):
+    client, calls, behavior = harness
+    behavior["role"] = "viewer"
+    response = client.get(f"/api/tenants/{TENANT}/workspace")
+    assert response.status_code == 200
+    assert response.json()["role"] == "viewer"
+    for request in calls[1:]:
+        assert request.url.params["tenant_id"] == f"eq.{TENANT}"
+        assert request.headers["authorization"] == "Bearer user-access-token"
+
+
+def test_membership_removal_takes_effect_on_next_request(harness):
+    client, calls, behavior = harness
+    assert client.get(f"/api/tenants/{TENANT}/workspace").status_code == 200
+    behavior["member"] = False
+    calls.clear()
+    assert client.get(f"/api/tenants/{TENANT}/workspace").status_code == 404
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("failure", [None, 401, 403, 500])
+def test_logout_clears_session_and_pending_link_even_when_provider_fails(harness, failure):
+    client, calls, behavior = harness
+    client.cookies.clear()
+    client.post("/api/auth/verify", json={"email": "admin@example.com", "code": "123456"}, headers=HEADERS)
+    client.post("/api/auth/code", json={"email": "admin@example.com"}, headers=HEADERS)
+    behavior["failure"] = failure
+    response = client.post("/api/auth/logout", json={}, headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": False, "provider_revoked": failure != 500}
+    cookies = response.headers.get_list("set-cookie")
+    assert len(cookies) == 2
+    assert all(
+        "HttpOnly" in c and "Secure" in c and "Path=/" in c and "Max-Age=0" in c and "Domain=" not in c
+        for c in cookies
+    )
+    assert not client.cookies.get("__Host-operis_session")
+    assert not client.cookies.get("__Host-operis_pkce")
+    calls.clear()
+    assert client.get("/api/me").status_code == 401
+    assert client.get("/api/auth/callback?code=old-link", follow_redirects=False).status_code == 400
+    assert calls == []
+    assert client.post("/api/auth/logout", json={}, headers=HEADERS).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "query",
+    ["error=access_denied&error_code=otp_expired&error_description=private", "code=expired", "code=replayed"],
+)
+def test_failed_link_has_safe_recovery_and_no_session(harness, query):
+    client, calls, behavior = harness
+    client.cookies.clear()
+    client.post("/api/auth/code", json={"email": "admin@example.com"}, headers=HEADERS)
+    behavior["failure"] = 400
+    result = client.get(f"/api/auth/callback?{query}", follow_redirects=False)
+    assert result.status_code == 400
+    assert '<a href="/">Operis</a>' in result.text
+    assert "private" not in result.text
+    assert result.headers["referrer-policy"] == "no-referrer"
+    assert "default-src 'none'" in result.headers["content-security-policy"]
+    assert result.headers["cache-control"] == "no-store"
+    assert not client.cookies.get("__Host-operis_pkce")
+    assert not client.cookies.get("__Host-operis_session")
+
+
+def test_site_success_scopes_parent_and_correlates_audit_request(harness):
+    client, calls, _ = harness
+    original = client.app.state.gateway
+
+    class VisibleCompanyGateway:
+        async def request(self, method, path, **kwargs):
+            if method == "GET" and path == "/rest/v1/operis_companies":
+                assert kwargs["params"] == {"select": "id", "id": f"eq.{USER}", "tenant_id": f"eq.{TENANT}"}
+                assert kwargs["token"] == "user-access-token"
+                return [{"id": USER}]
+            return await original.request(method, path, **kwargs)
+
+    client.app.state.gateway = VisibleCompanyGateway()
+    response = client.post(
+        f"/api/tenants/{TENANT}/sites",
+        json={"company_id": USER, "code": "SITE", "name": "Facility"},
+        headers=HEADERS,
+    )
+    assert response.status_code == 201
+    assert json.loads(calls[-1].content) == {
+        "tenant_id": TENANT,
+        "company_id": USER,
+        "code": "SITE",
+        "name": "Facility",
+    }
+    assert calls[-1].headers["x-request-id"] == response.headers["x-request-id"]
+    assert calls[-1].headers["authorization"] == "Bearer user-access-token"

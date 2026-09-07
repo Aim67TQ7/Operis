@@ -76,3 +76,16 @@ Organization lists are capped at 200 records and activity at the latest 200 even
 Password login is available alongside email links. After signing in, expand **Account password**, enter and confirm a password of at least 12 characters, and save. This updates the same ZODA Auth identity used by other connected applications. Supabase's existing password and reauthentication policies still apply; no project settings are changed. For a forgotten password, use an email link to sign in and return to Account password. If the provider requires a fresh session, sign out and use a fresh email link first.
 
 The backend uses the password grant and the current caller's authenticated update-user endpoint. Passwords are not normalized, logged, returned in JSON, or persisted by Operis. Login attempts are rate-limited; password updates require the verified session, allowed Origin and JSON. The existing tenant membership checks remain unchanged. Live password entry is performed by the user; deployment and an actual password sign-in remain acceptance gates.
+
+
+## Repeatable staging HTTP acceptance
+
+After the operator designates an existing administrator and viewer in one Operis tenant, and the viewer has access to a second tenant invisible to the administrator, run from the repository root:
+
+```bash
+apps/api/.venv/bin/python scripts/verify-staging.py --write-fixtures
+```
+
+The script is fixed to the approved Netlify origin and ZODA URL. It prompts locally for existing account credentials and a modern publishable key; do not place secrets in shell arguments, chat, evidence or source. It does not set passwords, create accounts, change memberships or modify shared Auth. It creates and retains one labeled company and site per invocation, verifies persisted actor/before/after/request evidence, checks API 403/404 and direct PostgREST isolation/tampering, and clears its own sessions. Its final JSON is sanitized; a nonzero exit means acceptance failed. Review the target and use only designated test accounts.
+
+Live browser layout, cookie/storage inspection, real delivered expired links and membership removal remain separate checks. Do not mark the draft PR ready solely because this runner or local tests pass.

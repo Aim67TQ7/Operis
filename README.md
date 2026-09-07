@@ -12,7 +12,7 @@ Operis is an operating intelligence layer above existing business systems. This 
 - Postgres membership-based RLS, composite tenant/company foreign keys, and atomic, client-immutable audit records with before/after evidence.
 - API liveness/readiness, request correlation, sanitized structured request logs, bounded OTP attempts, tests and CI.
 
-**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. The Docker backend now runs on Pete and passed its HTTPS readiness check. The frontend API proxy is deployed. Real sign-in and workspace acceptance still await shared Auth compatibility checks and first-admin provisioning. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
+**Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. The Docker backend now runs on Pete and passed its HTTPS readiness check. The frontend API proxy is deployed. The first administrator is provisioned; real browser company/site persistence and audit read-back passed on 2026-09-07. Authenticated viewer/cross-tenant checks and the remaining session/browser gates still keep PR #1 in draft. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
 
 ## Layout
 

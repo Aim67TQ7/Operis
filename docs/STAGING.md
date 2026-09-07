@@ -44,3 +44,10 @@ The frontend now routes API requests to the HTTPS Pete backend. The initial plac
 Retain this additive schema during application rollback. Do not drop shared schemas, undo unrelated grants, or roll back shared Auth settings. Record an immutable backend image and verify backups before accepting operational writes. The deployed frontend permalink is [this release](https://6a9c195e0e442f20d55397e0--operis-staging.netlify.app).
 
 The proxy deployment permalink is [this release](https://6a9c5d465bf2eddc00dfa917--operis-staging.netlify.app).
+
+
+## Acceptance continuation, 2026-09-07
+
+Read-only Netlify inspection identifies current ready frontend deploy `6a9c7086b96cca868f567eec`, which includes password/link sign-in. Direct SSH inspection confirms the healthy Operis backend runs `operis-api:258f96d724963bb8ae2a52d8e2a9396ac4ac902d` on Pete in `/opt/operis-staging`. Earlier statements about unavailable SSH and missing password UI are historical.
+
+Browser creation, full-reload persistence and audit evidence passed for one labeled PR1 acceptance company/site. Retain these records and their history; no automatic cleanup or shared schema reset is authorized. Staging currently has one tenant and no viewer membership, so live two-tenant/viewer acceptance still requires designated existing accounts and an approved isolated fixture. See the current VERIFICATION.md matrix.

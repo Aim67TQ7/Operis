@@ -85,7 +85,10 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
     setError("");
     try {
       if (usePassword) {
-        await api("/auth/password", {method: "POST", body: JSON.stringify({email, password})});
+        await api("/auth/password", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
         onSuccess();
       } else if (sent) {
         await api("/auth/verify", {
@@ -145,7 +148,19 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
-          {usePassword && <label>Password<input type="password" autoComplete="current-password" required maxLength={256} value={password} onChange={(e) => setPassword(e.target.value)} /></label>}
+          {usePassword && (
+            <label>
+              Password
+              <input
+                type="password"
+                autoComplete="current-password"
+                required
+                maxLength={256}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </label>
+          )}
           {sent && (
             <label>
               Sign-in code
@@ -165,9 +180,11 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
           <button className="primary" disabled={busy}>
             {busy
               ? "Please wait…"
-              : usePassword ? "Sign in with password" : sent
-                ? "Enter workspace"
-                : "Send sign-in link"}
+              : usePassword
+                ? "Sign in with password"
+                : sent
+                  ? "Enter workspace"
+                  : "Send sign-in link"}
             <span aria-hidden="true">→</span>
           </button>
           {sent && (
@@ -184,8 +201,21 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
               Use another email or request a new link
             </button>
           )}
-          <button type="button" className="text-button" disabled={busy} onClick={() => {setUsePassword(!usePassword); setSent(false); setCode(""); setPassword(""); setError("");}}>
-            {usePassword ? "Forgot password? Sign in with an email link" : "Use a password instead"}
+          <button
+            type="button"
+            className="text-button"
+            disabled={busy}
+            onClick={() => {
+              setUsePassword(!usePassword);
+              setSent(false);
+              setCode("");
+              setPassword("");
+              setError("");
+            }}
+          >
+            {usePassword
+              ? "Forgot password? Sign in with an email link"
+              : "Use a password instead"}
           </button>
           <p className="login-note">
             Access is managed by your organization administrator.
@@ -518,26 +548,76 @@ function PasswordSettings() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   async function save(e: FormEvent) {
-    e.preventDefault(); setError(""); setDone(false);
-    if (password !== confirm) {setError("Passwords do not match."); return;}
+    e.preventDefault();
+    setError("");
+    setDone(false);
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
     setBusy(true);
     try {
-      await api("/auth/password", {method: "PUT", body: JSON.stringify({password})});
+      await api("/auth/password", {
+        method: "PUT",
+        body: JSON.stringify({ password }),
+      });
       setDone(true);
-    } catch (e) {setError(errorText(e));}
-    finally {setBusy(false); setPassword(""); setConfirm("");}
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+      setPassword("");
+      setConfirm("");
+    }
   }
-  return <details className="panel"><summary>Account password</summary>
-    <p>Set or change your shared ZODA account password. This also changes the password used by other apps connected to this account.</p>
-    <p>Use at least 12 characters. If you forget it, sign in with an email link and return here.</p>
-    {error && <Notice>{error}</Notice>}
-    {done && <Notice kind="success">Password saved. You can now sign in with your email and password.</Notice>}
-    <form className="login-form" onSubmit={save}>
-      <label>New password<input type="password" autoComplete="new-password" required minLength={12} maxLength={256} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-      <label>Confirm new password<input type="password" autoComplete="new-password" required minLength={12} maxLength={256} value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>
-      <button disabled={busy}>{busy ? "Saving…" : "Save shared account password"}</button>
-    </form>
-  </details>;
+  return (
+    <details className="panel">
+      <summary>Account password</summary>
+      <p>
+        Set or change your shared ZODA account password. This also changes the
+        password used by other apps connected to this account.
+      </p>
+      <p>
+        Use at least 12 characters. If you forget it, sign in with an email link
+        and return here.
+      </p>
+      {error && <Notice>{error}</Notice>}
+      {done && (
+        <Notice kind="success">
+          Password saved. You can now sign in with your email and password.
+        </Notice>
+      )}
+      <form className="login-form" onSubmit={save}>
+        <label>
+          New password
+          <input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={12}
+            maxLength={256}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <label>
+          Confirm new password
+          <input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={12}
+            maxLength={256}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+        </label>
+        <button disabled={busy}>
+          {busy ? "Saving…" : "Save shared account password"}
+        </button>
+      </form>
+    </details>
+  );
 }
 
 export function App() {
@@ -588,6 +668,7 @@ export function App() {
       if (e instanceof ApiError && e.status === 401) {
         setIdentity(null);
         setTenantId("");
+        setError("Your session has expired. Sign in again to continue.");
       } else setError(errorText(e));
       return false;
     }
@@ -633,12 +714,21 @@ export function App() {
   async function signOut() {
     setBusy(true);
     try {
-      await api("/auth/logout", { method: "POST", body: "{}" });
+      const result = await api<{ provider_revoked?: boolean }>("/auth/logout", {
+        method: "POST",
+        body: "{}",
+      });
       generation.current++;
       setIdentity(null);
       setData(null);
       setTenantId("");
-      setError("");
+      setSuccess("");
+      setPage("Workspace");
+      setError(
+        result.provider_revoked === false
+          ? "You are signed out of this browser. The identity service was unavailable, so remote session revocation could not be confirmed."
+          : "",
+      );
     } catch (e) {
       setError(errorText(e));
     } finally {
