@@ -1,0 +1,43 @@
+name: operis-staging
+
+services:
+  api:
+    image: operis-api:${OPERIS_RELEASE:?Set OPERIS_RELEASE to the source commit}
+    build:
+      context: ../../apps/api
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    environment:
+      OPERIS_ENVIRONMENT: production
+      OPERIS_APP_ORIGIN: https://operis-staging.netlify.app
+      OPERIS_SUPABASE_URL: https://ezlmmegowggujpcnzoda.supabase.co
+      OPERIS_SUPABASE_PUBLISHABLE_KEY: ${OPERIS_SUPABASE_PUBLISHABLE_KEY:?Set the ZODA publishable key}
+      OPERIS_SESSION_SECONDS: "3600"
+    expose:
+      - "8000"
+    networks:
+      - ingress
+    labels:
+      caddy: ${OPERIS_API_HOSTNAME:?Set the confirmed DNS hostname}
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+      caddy_ingress_network: hub-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  ingress:
+    external: true
+    name: hub-net

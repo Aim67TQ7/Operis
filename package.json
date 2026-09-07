@@ -1,0 +1,33 @@
+{
+  "name": "operis",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --config apps/web/vite.config.ts",
+    "build": "tsc -p apps/web/tsconfig.json && vite build --config apps/web/vite.config.ts",
+    "test:db": "node --test supabase/tests/isolation.test.mjs",
+    "test:web": "vitest run --config apps/web/vitest.config.ts",
+    "format:check": "prettier --check apps/web/src apps/web/*.ts supabase/tests/*.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "5.0.0",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
+    "jsdom": "30.0.1",
+    "prettier": "3.9.6"
+  }
+}

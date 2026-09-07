@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Operis staging acceptance</title>
+    <link rel="stylesheet" href="pr1.css" />
+    <script type="module" src="pr1.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Operis staging acceptance</h1>
+      <p>
+        Temporary test page. Uses the current HttpOnly session through the
+        normal same-origin API. It does not receive or expose credentials. Only
+        run against the approved isolated QA fixtures.
+      </p>
+      <form id="checks">
+        <label>Admin organization ID<input name="admin" required /></label
+        ><label>Viewer organization ID<input name="viewer" required /></label
+        ><label>Private organization ID<input name="private" required /></label
+        ><label>Private company ID<input name="company" required /></label
+        ><button>Run authenticated boundary checks</button>
+      </form>
+      <button id="lost" disabled>Check removed viewer membership</button>
+      <p role="status" id="status">Ready</p>
+      <pre id="report" aria-label="Verification report"></pre>
+      <a href="/">Return to Operis</a>
+    </main>
+  </body>
+</html>

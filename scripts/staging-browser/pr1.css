@@ -1,0 +1,37 @@
+body {
+  font:
+    16px system-ui,
+    sans-serif;
+  color: #18263a;
+  background: #f4f6fa;
+  margin: 0;
+}
+main {
+  max-width: 850px;
+  margin: 32px auto;
+  padding: 24px;
+  background: white;
+}
+label {
+  display: block;
+  margin: 14px 0;
+}
+input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+}
+button {
+  padding: 12px;
+  margin: 10px 0;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid #2055d6;
+}
