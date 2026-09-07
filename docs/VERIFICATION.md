@@ -18,8 +18,8 @@ PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy �
 | Authenticated viewer/cross-tenant HTTP | Pending | Staging has one tenant, one admin membership and zero viewer memberships. No unrelated Auth account was assigned access. Local policy/API tests do not substitute for live JWT/HTTP acceptance. |
 | Live responsive UI and keyboard | Passed for exercised paths | Desktop 1440×900 and mobile 390×844: Organization fields fit; page width remains 390; Activity table scrolls within its container (707 content / 356 visible pixels). Both audit evidence panels opened, including Tab/Enter keyboard activation. Connections correctly shows not enabled. Viewport override reset afterward. Multi-tenant browser switching is still pending its fixture. |
 | Browser security inspection | Pending | Successful refresh establishes browser session forwarding. Detailed HttpOnly/Storage/Set-Cookie inspection has not been performed in the live browser. Cookie flags and token-free JSON are covered locally. |
-| Live delivered expired-link and replay | Pending | Local callback tests cover expired/provider-error/missing-verifier/replay recovery. A newly delivered expired link has not been exercised. |
-| Live logout after fix | Pending deployment | Fix always clears session and pending PKCE cookies, including provider outages, and reports unconfirmed remote revocation. The UI clears private state and displays that limitation. Local tests cover provider success/401/403/500 and next-request 401. |
+| Live callback recovery; delivered expired-link and replay | Recovery passed; delivery pending | Browser callback with explicit `otp_expired` error and no verifier rendered a safe recovery link; clicking it returned to sign-in. HTTP 400/no-store confirmed. This synthetic error URL does not establish expiry/replay of a delivered email link. Local tests cover those provider-response cases. |
+| Live logout after fix | Passed | Updated signed-in Chrome session displayed the real workspace after deployment; Sign out removed private UI and a full reload stayed signed out. Proxied HTTP logout separately returned 200 and both Secure/HttpOnly/Path=/ cookie deletions (session Strict, PKCE Lax), no Domain, Max-Age=0 and no-store. Provider outage cleanup is locally tested, not a live outage injection. |
 
 Audit receipts (UTC; account and tenant identifiers omitted):
 
@@ -106,3 +106,24 @@ Implemented server-side email-link request and callback, preserving shared Auth 
 ## Password authentication addition
 
 24 API tests pass, including password grant cookie isolation, exact password preservation, authenticated self-only updates, Origin rejection, generic failure messages and rate limits. Frontend password confirmation/clearing is tested alongside the existing UI suite. Frontend build and API lint pass. Provider responses are mocked; no real account password was set during these checks.
+
+
+## Deployed acceptance fix, 2026-09-07
+
+- Application source: `6fe21263b5b55333c5bf10e0a9a1973f4d799dc2`. [GitHub Actions run 34106990331](https://github.com/Aim67TQ7/Operis/actions/runs/34106990331) passed.
+- Frontend: ready deploy `6a9e868480b3933803d96053`, built locally with the locked dependencies and uploaded to the existing staging site. Netlify redirects/headers retained.
+- Backend: `operis-api:6fe21263b5b55333c5bf10e0a9a1973f4d799dc2`, image digest `sha256:e894ce2299876b319d449d180167a92bef895fc17f3500d285d558a11485d2e8`; Compose reports Healthy. Only Operis api was recreated. The saved release identifier was updated atomically; other runtime values preserved.
+- Browser session receipts from sanitized backend logs: `/api/me` 200 (`e700a103-d8da-4cf6-9ca6-aa4617559bff`), workspace 200 (`e4ac0019-ee12-441b-b202-074ebd8d8990`), authenticated logout 200 (`f326c41d-4765-4856-bc6a-89b5aa04a621`).
+- Post-deploy checks at 2026-09-07T09:41:07.693179+00:00: all below passed with no-store headers. No emails were sent by these probes.
+
+| Request | HTTP | Request ID |
+| --- | --- | --- |
+| GET /api/health/live | 200 | `2d0c3f30-9ed5-4c3e-970b-3f8fe6606709` |
+| GET /api/health/ready | 200 | `a2f9e192-ea2b-49e7-8e11-3574e76a0b5e` |
+| GET /api/me | 401 | `8c9b5dd3-56eb-49ea-88a9-9518f5f3c1f6` |
+| POST /api/auth/verify | 422 | `067ca269-ca02-4b33-84fb-070bdf20874c` |
+| POST /api/auth/verify | 403 | `e1a4657c-8e23-43c8-b7bd-aff75611737e` |
+| GET /api/auth/callback | 400 | `1e98d5d2-10d9-4ca9-a1c4-7cd3ccd2b75d` |
+| POST /api/auth/logout | 200 | `70ab512f-1b7d-4754-817b-fbbc44703c1e` |
+
+Keep PR #1 draft: designation/provisioning of the two-tenant test membership arrangement, real authenticated viewer/cross-tenant HTTP, multi-tenant browser switching, detailed signed-in cookie/storage inspection, and delivered expired-link/replay acceptance remain open. Production backup/restore and operational release controls remain broader production gates.

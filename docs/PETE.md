@@ -67,3 +67,8 @@ The user built and started source commit `4db7de238ec797f09b6e29ac90912b6c0889e1
 HTTPS liveness returned HTTP 200 via Caddy at 18:11:05 UTC. Initial readiness failed because the saved publishable key did not match ZODA and all three direct Supabase probes returned 401. The user entered the verified ZODA publishable key through a hidden prompt; the environment file was replaced atomically with mode 600 and only the Operis API container was recreated. HTTPS readiness then returned HTTP 200 at 18:16:30 UTC, with `Cache-Control: no-store` and request ID `4923919a-c625-47fd-9b98-c4f765e1b747`.
 
 This verifies the backend's Auth-health and anonymous schema probe from Pete. It does not verify email delivery, user sessions or tenant membership. The original readiness failure was configuration-related; no shared Supabase keys or Auth settings were rotated or changed.
+
+
+## Acceptance fix deployment, 2026-09-07
+
+Direct SSH from the current Mac workspace succeeded using the existing Operis key (never copied into source). The clean checkout `/opt/operis-staging` was fast-forwarded to `6fe21263b5b55333c5bf10e0a9a1973f4d799dc2`; Compose validation passed and only the Operis api service was rebuilt/recreated. Image digest: `sha256:e894ce2299876b319d449d180167a92bef895fc17f3500d285d558a11485d2e8`; container Healthy. `OPERIS_RELEASE` was updated atomically in the existing mode-600 environment file; other settings were preserved. Frontend-proxied readiness and logout cookie deletion checks passed. Existing hub-caddy, hub-net, shared Auth, database objects and legacy applications were unchanged. Earlier SSH-unavailable statements describe the original build environment.
