@@ -900,3 +900,7 @@ footer span {
     gap: 8px;
   }
 }
+.discovery-confirm {
+  flex-direction: row;
+  gap: 10px;
+}

@@ -343,7 +343,11 @@ export function Discovery({
       {assessment && report?.coverage && (
         <section className="panel" aria-label="Saved assessment">
           <div className="panel-heading">
-            <h2>3. Your assessment</h2>
+            <h2>
+              3. Assessment for{" "}
+              {companies.find((c) => c.id === assessment.company_id)?.name ||
+                "selected company"}
+            </h2>
             <a
               href={`/api${prefix}/discovery/${assessment.id}/export`}
               download

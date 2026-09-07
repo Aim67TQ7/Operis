@@ -181,3 +181,7 @@ On 2026-09-07, after the remaining direct PostgREST checks were identified, the 
 On 2026-09-07, after the user-verified expired-link and PostgREST results were recorded and consumed-link replay was identified as the last unconfirmed case, the user instructed: “all good - let’s finalize PR”. This closes the user acceptance gate and authorizes moving PR #1 out of draft for review. It does not turn user-reported acceptance into independently captured HTTP evidence. The automated runner and direct replay receipt limitations above remain explicit.
 
 The preceding evidence commit `e3e1d4b` passed [GitHub Actions run 34112471483](https://github.com/Aim67TQ7/Operis/actions/runs/34112471483). There were no submitted PR reviews or inline review threads at finalization. No application, schema, shared Auth or deployment changes are part of this final documentation update. Production backup/restore and operational release controls remain separate from foundation review readiness.
+
+## Discovery continuation
+
+PR #3 adds the reviewed scanner, `/discovery`, strict server ingestion, immutable assessments and audited pilot requests. See [DISCOVERY.md](DISCOVERY.md) for its independent test/deployment receipts and remaining live gates. Foundation acceptance does not imply successful real Epicor scanning or browser upload acceptance.

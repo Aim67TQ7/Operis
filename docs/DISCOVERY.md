@@ -51,3 +51,22 @@ Local build, offline API/scanner tests, browser component tests and real Postgre
 - Web: 15 passed, including reviewed file upload, unknown coverage, saved pilot state, viewer restrictions and expired-session handling.
 - PostgreSQL/PGlite: 26 passed across foundation and discovery, including capability rejection, company/tenant ownership, viewer denial, atomic audit, immutable retries and pilot idempotency.
 - Live deployment and authorized ERP/Windows receipts: pending.
+
+### Staging receipt, 2026-09-07
+
+- Draft PR: https://github.com/Aim67TQ7/Operis/pull/3.
+- Application source: `f8a85516d19a2eed77127bada15b79316b783595`; subsequent verification-only commit `5a445cc4d0181a1568adacec1c0ab647a883e5e2`.
+- Hosted migration `discovery_ingestion`: actual version `20260907112520`. All four discovery tables expose only SELECT to authenticated users, with membership read policies. The backend-only capability hash is configured; its plaintext remains in Pete's mode-600 env file and is never part of this repository.
+- `supabase/tests/discovery-live.sql` passed against ZODA. Validated persistence, audit actor/request, identical retry, changed-content conflict, cross-company rejection, direct-write rejection, pilot idempotency, missing-capability rejection, viewer denial, membership removal and anonymous denial were checked with actual database roles. All fixtures and temporary capability settings rolled back. This is not an issued-JWT/browser test.
+- Pete container is Healthy, running `operis-api:f8a85516d19a2eed77127bada15b79316b783595`. Docker image ID reported by inspect: `sha256:d4a6f7aeb9f48f4a15f850b5ca2ce19f07c8e3188bfe883cd5c06eeba8d5dcf1`.
+- Preview `6a9e9f9b5356e8ff51ade8c7` passed HTTP route, scanner-byte/hash and upload Origin/auth/content-type checks. Frontend staging deploy `6a9ea03d57f6a9043aba7d1e` then published to the existing site. HTTPS readiness returns 200 and OpenAPI exposes six discovery paths.
+- The normal signed-in Chrome session loads `/discovery`, company selection, scanner/configuration links, upload controls and assessment history. Source kit bytes served publicly match SHA-256 `6ecb65af5a3eb91771bad0f9cc739ca931db7090cfaeb13bfff1966a2c8c87b9`.
+- A downloaded copy of the published kit ran on macOS against a **synthetic local HTTPS fixture**, produced a valid package with 12 GET requests, and reported one intentionally unavailable probe. The fixture is associated with the pre-existing labeled acceptance company; its signed configuration was issued using the deployed signing helper on Pete. Browser download actions were separately initiated. This is not a real Epicor scan.
+- [GitHub Actions run 34116851899](https://github.com/Aim67TQ7/Operis/actions/runs/34116851899) passed API, frontend/database, and **Windows scanner** jobs. The Windows job executes the actual batch launcher in a path containing spaces against a synthetic HTTPS server, verifies credentials/extra fields are not exported, checks output checksums, and verifies failed preflight does not create another package.
+- Security advisors report one Operis informational notice: the private capability-hash table has RLS and intentionally no client policies. Clients have no grants; opening access would weaken the intended boundary. See the [RLS policy advisory](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy). Unrelated shared-project findings were not modified.
+
+### Open acceptance gates
+
+The Chrome extension rejected file selection with `fileChooser.setFiles: Not allowed`; its documented requirement is "Allow access to file URLs." A package was prepared, but no browser upload, saved assessment or pilot click is claimed. The user was asked to enable the extension setting. The real Epicor company/environment selection is also still awaiting the user's answer. Existing Epicor settings were identified on the Mac, but were not used without confirming the intended test target. No customer ERP scan or customer invitation has occurred.
+
+Keep PR #3 draft until the remaining acceptance receipts are recorded. Earlier source/compile/database successes do not close these gates.
