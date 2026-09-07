@@ -4,7 +4,7 @@ Latest acceptance work: 2026-09-07. The current matrix below supersedes older pe
 
 ## Review-readiness acceptance, 2026-09-07
 
-PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy → Docker FastAPI on Pete → caller-JWT PostgREST/RLS architecture is unchanged. No schema migration, shared Auth setting, account credential or membership was changed.
+PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy → Docker FastAPI on Pete → caller-JWT PostgREST/RLS architecture is unchanged. No schema migration, shared Auth setting or account credential was changed. On continuation, two isolated QA tenants and one temporary viewer membership for the existing approved account were provisioned; the original Operis administrator membership is unchanged.
 
 | Acceptance | Result | Evidence / limitation |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy �
 | Live company/site persistence | Passed | Chrome administrator created `PR1-20260907` company and `PR1-SITE` child site; both visible with their relationship after a full page reload. These labeled staging acceptance records and their audit history are intentionally retained. |
 | Live company/site audit | Passed | Expanded both events in Activity. Database read-back independently confirms INSERT, administrator actor, null before, exact `after = to_jsonb(row)`, and request correlation. Receipts below. |
 | Expired browser session write | Passed on previously deployed source | A stale session returned sign-in-required and removed the workspace UI; read-back confirmed zero acceptance rows before the successful fresh-session retry. This is session expiry, not a delivered expired magic-link test. |
-| Authenticated viewer/cross-tenant HTTP | Pending | Staging has one tenant, one admin membership and zero viewer memberships. No unrelated Auth account was assigned access. Local policy/API tests do not substitute for live JWT/HTTP acceptance. |
+| Authenticated viewer/cross-tenant HTTP | Pending | Isolated QA Viewer and QA Private tenants are now provisioned. The existing approved account is a viewer in QA Viewer and has no access to QA Private; its original Operis administrator role is unchanged. A real signed-in session is still required to run the HTTP matrix. No unrelated Auth account was assigned access. |
 | Live responsive UI and keyboard | Passed for exercised paths | Desktop 1440×900 and mobile 390×844: Organization fields fit; page width remains 390; Activity table scrolls within its container (707 content / 356 visible pixels). Both audit evidence panels opened, including Tab/Enter keyboard activation. Connections correctly shows not enabled. Viewport override reset afterward. Multi-tenant browser switching is still pending its fixture. |
 | Browser security inspection | Pending | Successful refresh establishes browser session forwarding. Detailed HttpOnly/Storage/Set-Cookie inspection has not been performed in the live browser. Cookie flags and token-free JSON are covered locally. |
 | Live callback recovery; delivered expired-link and replay | Recovery passed; delivery pending | Browser callback with explicit `otp_expired` error and no verifier rendered a safe recovery link; clicking it returned to sign-in. HTTP 400/no-store confirmed. This synthetic error URL does not establish expiry/replay of a delivered email link. Local tests cover those provider-response cases. |
@@ -126,4 +126,13 @@ Implemented server-side email-link request and callback, preserving shared Auth 
 | GET /api/auth/callback | 400 | `1e98d5d2-10d9-4ca9-a1c4-7cd3ccd2b75d` |
 | POST /api/auth/logout | 200 | `70ab512f-1b7d-4754-817b-fbbc44703c1e` |
 
-Keep PR #1 draft: designation/provisioning of the two-tenant test membership arrangement, real authenticated viewer/cross-tenant HTTP, multi-tenant browser switching, detailed signed-in cookie/storage inspection, and delivered expired-link/replay acceptance remain open. Production backup/restore and operational release controls remain broader production gates.
+Keep PR #1 draft: real authenticated viewer/cross-tenant HTTP using the now-provisioned isolated QA fixtures, multi-tenant browser switching, detailed signed-in cookie/storage inspection, and delivered expired-link/replay acceptance remain open. Production backup/restore and operational release controls remain broader production gates.
+
+
+## Single-account QA continuation
+
+The user authorized continuation. Two synthetic fixture organizations, **Operis PR1 QA Viewer** and **Operis PR1 QA Private**, were provisioned atomically with one company each. Only the existing approved identity received a temporary viewer membership, scoped to QA Viewer. QA Private has no membership. The original Operis administrator membership and all Auth users/settings were preserved. Fixture identifiers and account details are omitted from public evidence.
+
+`scripts/staging-browser/` contains a temporary same-origin browser harness for the authenticated API matrix, storage non-persistence and immediate membership-removal check. It is excluded from the ordinary Vite build. Staging deploy `6a9e8af94b31821a386414d1` temporarily includes `/__qa/pr1.html` alongside the unchanged application from `6fe2126`; restore the normal build after collecting the evidence. No backend test endpoints, credential forms, token export or authorization bypass were added.
+
+The first attempt at `2026-09-07T10:02:21.382Z` stopped at `/api/me` **401**, request `bb8500bb-b5d5-4427-92ae-50b69082ddd3`, because the browser remained signed out. No mutation requests ran; this is not an authenticated acceptance pass. A fresh sign-in-link request completed at approximately 10:01 UTC in the existing Chrome tab. Completion of that user sign-in is pending. PR remains draft.
