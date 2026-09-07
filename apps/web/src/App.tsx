@@ -190,6 +190,7 @@ function SignIn({ onSuccess }: { onSuccess: () => void }) {
           <p className="login-note">
             Access is managed by your organization administrator.
           </p>
+          <p><a href="/resources/">Explore ERP discovery and on-premises planning guides</a></p>
         </form>
       </main>
     </div>
