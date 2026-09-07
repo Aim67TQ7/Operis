@@ -14,6 +14,10 @@ Operis is an operating intelligence layer above existing business systems. This 
 
 **Staging frontend deployed:** [operis-staging.netlify.app](https://operis-staging.netlify.app). The approved ZODA database now contains the isolated Operis foundation. The Docker backend now runs on Pete and passed its HTTPS readiness check. The frontend API proxy is deployed. The first administrator is provisioned; real browser company/site persistence and audit read-back passed on 2026-09-07. Authenticated FastAPI viewer/cross-tenant denials, tenant switching, membership removal, browser non-persistence and logout also passed. The user also verified expired-link recovery requires a new link. PostgREST is also accepted by user verification. The user has given final acceptance to move PR #1 to review readiness; evidence distinguishes captured checks from user sign-off. See [the staging receipt](docs/STAGING.md). The Connections screen accurately states that integrations are not enabled. This is the first foundation slice, not completion of all seed platform gates.
 
+## Discovery assessment
+
+The integrated `/discovery` workflow and scanner kit 0.3.0 are implemented on this branch. Server-validated aggregate uploads, immutable assessments and audited pilot requests are described in [DISCOVERY.md](docs/DISCOVERY.md), including staging receipts and remaining live acceptance. The scanner is an assisted, limited metadata assessment, not a certified full-estate or AP automation product.
+
 ## Layout
 
 | Path | Responsibility |

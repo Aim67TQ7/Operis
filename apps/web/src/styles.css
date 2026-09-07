@@ -775,3 +775,128 @@ footer span {
     display: none;
   }
 }
+
+.discovery {
+  display: grid;
+  gap: 20px;
+}
+.discovery-intro,
+.discovery-body {
+  padding: 24px;
+}
+.discovery-intro h2 {
+  margin-top: 14px;
+  font-size: 25px;
+}
+.discovery-intro p {
+  max-width: 760px;
+  line-height: 1.65;
+}
+.discovery-steps {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding-left: 20px;
+  margin: 24px 0;
+}
+.discovery-body p {
+  line-height: 1.6;
+}
+.discovery-body label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.discovery-body select {
+  max-width: 520px;
+}
+.discovery-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 20px 0;
+}
+.button-link {
+  display: inline-block;
+  padding: 11px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #174ab6;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+.button-link:hover {
+  background: #eef3ff;
+}
+.discovery-confirm {
+  display: flex !important;
+  align-items: start;
+  line-height: 1.5;
+}
+.discovery-confirm input {
+  width: auto;
+  margin-top: 5px;
+}
+.discovery details {
+  margin: 22px 0;
+  line-height: 1.6;
+}
+.discovery summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.coverage {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  padding: 20px;
+  background: #f0f5fd;
+  border-radius: 8px;
+}
+.coverage > strong {
+  font-size: 38px;
+  white-space: nowrap;
+  color: #234fb0;
+}
+.coverage h3,
+.coverage p {
+  margin: 4px 0;
+}
+.discovery-finding {
+  border-left: 3px solid #d0dcee;
+  padding: 4px 20px;
+  margin: 18px 0;
+}
+.discovery-finding h4 {
+  margin: 4px 0;
+}
+.discovery .package-digest {
+  overflow-wrap: anywhere;
+}
+.pilot-panel {
+  background: #f6f8fb;
+  padding: 22px;
+  border-radius: 8px;
+  margin-top: 24px;
+}
+@media (max-width: 600px) {
+  .discovery-intro,
+  .discovery-body {
+    padding: 16px;
+  }
+  .coverage {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .discovery-steps {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .discovery .panel-heading {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

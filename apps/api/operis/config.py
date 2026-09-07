@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_publishable_key: SecretStr = SecretStr("")
     session_seconds: int = 3600
+    discovery_ingest_key: SecretStr = SecretStr("")
 
     @model_validator(mode="after")
     def validate_production(self):

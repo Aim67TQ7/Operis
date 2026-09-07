@@ -14,9 +14,19 @@ import {
   type Workspace,
 } from "./api";
 
-type Page = "Workspace" | "Organization" | "Connections" | "Activity";
-const pages: Page[] = ["Workspace", "Organization", "Connections", "Activity"];
+import { Discovery } from "./Discovery";
+
+type Page =
+  "Discovery" | "Workspace" | "Organization" | "Connections" | "Activity";
+const pages: Page[] = [
+  "Discovery",
+  "Workspace",
+  "Organization",
+  "Connections",
+  "Activity",
+];
 const symbols: Record<Page, string> = {
+  Discovery: "◎",
   Workspace: "◫",
   Organization: "▦",
   Connections: "⇄",
@@ -623,7 +633,9 @@ function PasswordSettings() {
 export function App() {
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [tenantId, setTenantId] = useState("");
-  const [page, setPage] = useState<Page>("Workspace");
+  const [page, setPage] = useState<Page>(
+    window.location.pathname === "/discovery" ? "Discovery" : "Workspace",
+  );
   const [data, setData] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -631,6 +643,14 @@ export function App() {
   const [busy, setBusy] = useState(false);
   const generation = useRef(0);
   const tenant = identity?.tenants.find((t) => t.id === tenantId);
+  useEffect(() => {
+    const navigate = () =>
+      setPage(
+        window.location.pathname === "/discovery" ? "Discovery" : "Workspace",
+      );
+    window.addEventListener("popstate", navigate);
+    return () => window.removeEventListener("popstate", navigate);
+  }, []);
   async function loadIdentity() {
     setLoading(true);
     setError("");
@@ -769,6 +789,11 @@ export function App() {
               key={p}
               aria-current={page === p ? "page" : undefined}
               onClick={() => {
+                window.history.pushState(
+                  {},
+                  "",
+                  p === "Discovery" ? "/discovery" : "/",
+                );
                 setPage(p);
                 setSuccess("");
               }}
@@ -832,6 +857,7 @@ export function App() {
               <p>
                 {
                   {
+                    Discovery: "Scan, assess, and choose a focused pilot.",
                     Workspace: "Your organization at a glance.",
                     Organization: "Define your company and facility structure.",
                     Connections: "Bring your operational systems into Operis.",
@@ -875,6 +901,21 @@ export function App() {
             </section>
           ) : (
             <>
+              {page === "Discovery" && (
+                <Discovery
+                  key={tenantId}
+                  tenant={tenant}
+                  companies={data.companies}
+                  onExpired={() => {
+                    setIdentity(null);
+                    setTenantId("");
+                    setError(
+                      "Your session has expired. Sign in again to continue.",
+                    );
+                  }}
+                  onSetup={() => setPage("Organization")}
+                />
+              )}
               {page === "Workspace" && (
                 <>
                   <div className="stats">
@@ -910,13 +951,20 @@ export function App() {
                     <div className="setup-row">
                       <span className="step">02</span>
                       <div>
-                        <h3>Connect your systems</h3>
+                        <h3>Assess your Epicor environment</h3>
                         <p>
-                          Connector setup and existing module integration follow
-                          in Phase 2.
+                          Download the scanner, upload aggregate results and
+                          review your assessment.
                         </p>
                       </div>
-                      <span className="badge">Planned</span>
+                      <button
+                        onClick={() => {
+                          window.history.pushState({}, "", "/discovery");
+                          setPage("Discovery");
+                        }}
+                      >
+                        Open Discovery →
+                      </button>
                     </div>
                     <div className="setup-row">
                       <span className="step">03</span>

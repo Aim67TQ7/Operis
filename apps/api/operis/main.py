@@ -17,6 +17,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from .config import Settings, get_settings
+from .discovery import MAX_UPLOAD, install_routes
 from .gateway import Gateway
 
 log = logging.getLogger("operis")
@@ -146,6 +147,18 @@ def create_app(settings: Settings | None = None):
             "origin"
         ) != settings.app_origin.rstrip("/"):
             response = JSONResponse({"detail": "Request origin is not allowed."}, status_code=403)
+        elif request.method == "POST" and re.fullmatch(
+            r"/api/tenants/[0-9a-f-]+/companies/[0-9a-f-]+/discovery", request.url.path
+        ):
+            if request.headers.get("content-type", "").split(";")[0] != "application/zip":
+                response = JSONResponse({"detail": "A ZIP package is required."}, status_code=415)
+            elif len(request.headers.get("content-length", "0")) > 12 or (
+                request.headers.get("content-length", "0").isdigit()
+                and int(request.headers.get("content-length", "0")) > MAX_UPLOAD
+            ):
+                response = JSONResponse({"detail": "The upload limit is 1 MiB."}, status_code=413)
+            else:
+                response = await call_next(request)
         elif (
             request.method in {"POST", "PATCH", "PUT"}
             and request.headers.get("content-type", "").split(";")[0] != "application/json"
@@ -454,6 +467,7 @@ def create_app(settings: Settings | None = None):
         )
         return result[0]
 
+    install_routes(app, identity, gateway, member)
     return app
 
 
