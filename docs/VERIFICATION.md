@@ -77,3 +77,9 @@ Implemented server-side email-link request and callback, preserving shared Auth 
 ## Password authentication addition
 
 24 API tests pass, including password grant cookie isolation, exact password preservation, authenticated self-only updates, Origin rejection, generic failure messages and rate limits. Frontend password confirmation/clearing is tested alongside the existing UI suite. Frontend build and API lint pass. Provider responses are mocked; no real account password was set during these checks.
+
+## SEO and content foundation — September 6, 2026
+
+Prepared on `build/seo-content-foundation` based on `258f96d`. `npm run build` passed and generated eight resource pages with indexing disabled by default. `npm run test:seo` passed two tests covering preview/staging rejection, static HTML, draft exclusion, and sitemap/feed behavior. Existing web suite: 6 passed. Existing database suite: 15 passed. `git diff --check` passed. API source and authorization were not changed; API tests were not rerun for this slice.
+
+Browser inspection was attempted but interrupted without a usable result. No browser layout, mobile rendering, live Netlify routing/header, Search Console, indexing, performance score, or production-domain verification is claimed. The existing uploaded staging deployment has no recorded commit ref, so source parity must be resolved before deployment. See `docs/marketing/SEO_IMPLEMENTATION.md` for the release requirements.

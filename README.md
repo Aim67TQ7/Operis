@@ -77,3 +77,7 @@ API tests use isolated provider responses. Database tests execute the real schem
 ## Deployment direction
 
 Netlify serves the frontend and proxies `/api/*` to the Docker FastAPI backend under the same browser origin. The Netlify configuration proxies API requests to `https://operis-api.gp3.app`; the backend uses the approved ZODA project. The backend image runs as a non-root user with one worker. Read `docs/SETUP.md` before deploying; infrastructure changes, migrations and live provisioning require an approved target.
+
+## SEO and public resources
+
+The source build now includes static ERP planning resources at `/resources/`, plus draft blog articles. Run `npm run build` to generate them and `npm run test:seo` to check indexing boundaries. Indexing is disabled by default. See [SEO implementation and release requirements](docs/marketing/SEO_IMPLEMENTATION.md) before enabling production indexing or publishing articles. This source change is not a receipt for a live website deployment.
