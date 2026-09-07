@@ -4,7 +4,7 @@ Latest acceptance work: 2026-09-07. The current matrix below supersedes older pe
 
 ## Review-readiness acceptance, 2026-09-07
 
-PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy → Docker FastAPI on Pete → caller-JWT PostgREST/RLS architecture is unchanged. No schema migration, shared Auth setting or account credential was changed. On continuation, two isolated QA tenants and one temporary viewer membership for the existing approved account were provisioned; the original Operis administrator membership is unchanged.
+PR #1 is approved by the user for **review readiness**. The approved Vite/React → same-origin Netlify proxy → Docker FastAPI on Pete → caller-JWT PostgREST/RLS architecture is unchanged. No schema migration, shared Auth setting or account credential was changed. On continuation, two isolated QA tenants and one temporary viewer membership for the existing approved account were provisioned; the original Operis administrator membership is unchanged.
 
 | Acceptance | Result | Evidence / limitation |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy �
 | Live responsive UI and keyboard | Passed for exercised paths | Desktop 1440×900 and mobile 390×844: Organization fields fit; page width remains 390; Activity table scrolls within its container (707 content / 356 visible pixels). Both audit evidence panels opened, including Tab/Enter keyboard activation. Connections correctly shows not enabled. Viewport override reset afterward. Live admin → viewer → admin switching clears old records during loading, scopes loaded records and hides/restores write controls. |
 | Browser security inspection | Passed for exercised scope | While authenticated, the same-origin harness found no JavaScript-visible session/PKCE cookie, empty localStorage and sessionStorage, and no token fields in all checked API responses. Live logout header probes independently verified Secure/HttpOnly cookie deletions. Browser cookie-store metadata for the original sign-in Set-Cookie was not exported. |
 | Live membership removal | Passed | Removed only the temporary QA viewer membership. The next workspace request returned 404; /me omitted the revoked tenant. App Refresh cleared its private records; full reload selected the original admin organization and removed QA Viewer from the selector. Fixture rows and audit history retained. |
-| Live callback recovery; delivered expired-link and replay | Expired-link recovery passed (user verified); replay pending | The user confirmed normal sign-in works and that an expired email link required obtaining a new one. This is manual user acceptance of the expired-link recovery flow. Separately, the synthetic callback returned HTTP 400/no-store and a safe recovery link. A previously consumed link replay remains unverified live. |
+| Live callback recovery; delivered expired-link and replay | Expired-link recovery passed (user verified); remaining case accepted by final user sign-off | The user confirmed normal sign-in works and that an expired email link required obtaining a new one. This is manual user acceptance of the expired-link recovery flow. Separately, the synthetic callback returned HTTP 400/no-store and a safe recovery link. The user gave final acceptance after consumed-link replay was identified as the last unconfirmed case. No separate agent-captured replay HTTP receipt is claimed. |
 | Live logout after fix | Passed | Updated signed-in Chrome session displayed the real workspace after deployment; Sign out removed private UI and a full reload stayed signed out. Proxied HTTP logout separately returned 200 and both Secure/HttpOnly/Path=/ cookie deletions (session Strict, PKCE Lax), no Domain, Max-Age=0 and no-store. Provider outage cleanup is locally tested, not a live outage injection. |
 
 Audit receipts (UTC; account and tenant identifiers omitted):
@@ -127,7 +127,7 @@ Implemented server-side email-link request and callback, preserving shared Auth 
 | GET /api/auth/callback | 400 | `1e98d5d2-10d9-4ca9-a1c4-7cd3ccd2b75d` |
 | POST /api/auth/logout | 200 | `70ab512f-1b7d-4754-817b-fbbc44703c1e` |
 
-Keep PR #1 draft: replay of an already consumed email link remains unconfirmed. Expired-link recovery and PostgREST are recorded as passed by user confirmation. The live FastAPI viewer/cross-tenant, tenant-switching, membership-removal and browser non-persistence checks now pass. Production backup/restore and operational release controls remain broader production gates.
+The user approved finalizing PR #1 after the remaining consumed-link replay case was identified. Expired-link recovery and PostgREST are recorded as passed by user confirmation. The live FastAPI viewer/cross-tenant, tenant-switching, membership-removal and browser non-persistence checks now pass. Production backup/restore and operational release controls remain broader production gates.
 
 
 ## Single-account QA continuation
@@ -166,12 +166,18 @@ All harness requests also passed no-store, nonempty correlation ID and absence o
 
 In the app, switching to QA Viewer showed only its fixture company, no sites and no organization/company/site write forms. Switching back restored the original administrator records and controls. After viewer membership removal, Refresh showed a load error with no private records; full reload removed QA Viewer from the selector and opened the original administrator workspace. Logout then removed private UI and reload stayed signed out.
 
-Application code remains `6fe2126`. Harness/documentation commit `10206b2` passed [GitHub Actions run 34109505166](https://github.com/Aim67TQ7/Operis/actions/runs/34109505166). Normal frontend deploy `6a9e8eae62c1bc79311a8cae` removed the temporary harness after evidence collection; its old route now serves the ordinary SPA fallback. HTTPS frontend and proxied readiness passed, readiness request `40228f29-562e-4a51-8bce-d01c62c6f8df`. Harness source remains available for a future explicitly scoped run. PR remains draft for the unconfirmed consumed-link replay check.
+Application code remains `6fe2126`. Harness/documentation commit `10206b2` passed [GitHub Actions run 34109505166](https://github.com/Aim67TQ7/Operis/actions/runs/34109505166). Normal frontend deploy `6a9e8eae62c1bc79311a8cae` removed the temporary harness after evidence collection; its old route now serves the ordinary SPA fallback. HTTPS frontend and proxied readiness passed, readiness request `40228f29-562e-4a51-8bce-d01c62c6f8df`. Harness source remains available for a future explicitly scoped run. Final user sign-off authorizes marking PR #1 ready for review.
 
 ### User acceptance: expired email link
 
-On 2026-09-07 the user confirmed that normal Operis sign-in works, then reported: “the expired links passed - it made me get a new one”. Record expired-link recovery as passed by manual user verification. No new link, code or credentials were collected. This receipt does not assert a captured HTTP status or identify whether provider expiry or the browser verifier caused rejection. Rejection of a previously consumed link remains a separate live check.
+On 2026-09-07 the user confirmed that normal Operis sign-in works, then reported: “the expired links passed - it made me get a new one”. Record expired-link recovery as passed by manual user verification. No new link, code or credentials were collected. This receipt does not assert a captured HTTP status or identify whether provider expiry or the browser verifier caused rejection. At this receipt, rejection of a previously consumed link was still a separate live check; final user sign-off is recorded below.
 
 ### User acceptance: PostgREST
 
 On 2026-09-07, after the remaining direct PostgREST checks were identified, the user reported: “postgREST is perfect”. Record PostgREST as passed by user verification. No request-by-request statuses, test identities or runner output were provided. The credential-prompted runner was not executed by the agent, and no independent direct HTTP denial/tampering receipt is claimed. Existing automated SQL and live FastAPI evidence remains separately identified above.
+
+### Final review-readiness sign-off
+
+On 2026-09-07, after the user-verified expired-link and PostgREST results were recorded and consumed-link replay was identified as the last unconfirmed case, the user instructed: “all good - let’s finalize PR”. This closes the user acceptance gate and authorizes moving PR #1 out of draft for review. It does not turn user-reported acceptance into independently captured HTTP evidence. The automated runner and direct replay receipt limitations above remain explicit.
+
+The preceding evidence commit `e3e1d4b` passed [GitHub Actions run 34112471483](https://github.com/Aim67TQ7/Operis/actions/runs/34112471483). There were no submitted PR reviews or inline review threads at finalization. No application, schema, shared Auth or deployment changes are part of this final documentation update. Production backup/restore and operational release controls remain separate from foundation review readiness.
