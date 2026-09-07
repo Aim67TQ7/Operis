@@ -36,3 +36,12 @@ jobs:
       - run: uv run ruff check operis tests
       - run: uv run ruff format --check operis tests
       - run: uv run pytest -q
+  windows-scanner:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exercise batch launcher against synthetic local HTTPS ERP
+        run: python -m unittest discover -s scanner -p 'test_*.py' -v
