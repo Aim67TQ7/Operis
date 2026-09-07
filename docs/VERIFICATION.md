@@ -15,9 +15,10 @@ PR #1 remains **draft**. The approved Vite/React → same-origin Netlify proxy �
 | Live company/site persistence | Passed | Chrome administrator created `PR1-20260907` company and `PR1-SITE` child site; both visible with their relationship after a full page reload. These labeled staging acceptance records and their audit history are intentionally retained. |
 | Live company/site audit | Passed | Expanded both events in Activity. Database read-back independently confirms INSERT, administrator actor, null before, exact `after = to_jsonb(row)`, and request correlation. Receipts below. |
 | Expired browser session write | Passed on previously deployed source | A stale session returned sign-in-required and removed the workspace UI; read-back confirmed zero acceptance rows before the successful fresh-session retry. This is session expiry, not a delivered expired magic-link test. |
-| Authenticated viewer/cross-tenant HTTP | Pending | Isolated QA Viewer and QA Private tenants are now provisioned. The existing approved account is a viewer in QA Viewer and has no access to QA Private; its original Operis administrator role is unchanged. A real signed-in session is still required to run the HTTP matrix. No unrelated Auth account was assigned access. |
-| Live responsive UI and keyboard | Passed for exercised paths | Desktop 1440×900 and mobile 390×844: Organization fields fit; page width remains 390; Activity table scrolls within its container (707 content / 356 visible pixels). Both audit evidence panels opened, including Tab/Enter keyboard activation. Connections correctly shows not enabled. Viewport override reset afterward. Multi-tenant browser switching is still pending its fixture. |
-| Browser security inspection | Pending | Successful refresh establishes browser session forwarding. Detailed HttpOnly/Storage/Set-Cookie inspection has not been performed in the live browser. Cookie flags and token-free JSON are covered locally. |
+| Authenticated viewer/cross-tenant HTTP | FastAPI passed; direct PostgREST pending | Real Supabase-issued browser session: viewer reads 200; viewer rename/company/site writes 403; existing private tenant reads and writes 404; admin site creation with a private company 404. Every response was no-store, correlated and token-free. Rejected writes left viewer data/audit unchanged. Receipts below. Direct PostgREST bypass tests still require the credential-prompted runner. |
+| Live responsive UI and keyboard | Passed for exercised paths | Desktop 1440×900 and mobile 390×844: Organization fields fit; page width remains 390; Activity table scrolls within its container (707 content / 356 visible pixels). Both audit evidence panels opened, including Tab/Enter keyboard activation. Connections correctly shows not enabled. Viewport override reset afterward. Live admin → viewer → admin switching clears old records during loading, scopes loaded records and hides/restores write controls. |
+| Browser security inspection | Passed for exercised scope | While authenticated, the same-origin harness found no JavaScript-visible session/PKCE cookie, empty localStorage and sessionStorage, and no token fields in all checked API responses. Live logout header probes independently verified Secure/HttpOnly cookie deletions. Browser cookie-store metadata for the original sign-in Set-Cookie was not exported. |
+| Live membership removal | Passed | Removed only the temporary QA viewer membership. The next workspace request returned 404; /me omitted the revoked tenant. App Refresh cleared its private records; full reload selected the original admin organization and removed QA Viewer from the selector. Fixture rows and audit history retained. |
 | Live callback recovery; delivered expired-link and replay | Recovery passed; delivery pending | Browser callback with explicit `otp_expired` error and no verifier rendered a safe recovery link; clicking it returned to sign-in. HTTP 400/no-store confirmed. This synthetic error URL does not establish expiry/replay of a delivered email link. Local tests cover those provider-response cases. |
 | Live logout after fix | Passed | Updated signed-in Chrome session displayed the real workspace after deployment; Sign out removed private UI and a full reload stayed signed out. Proxied HTTP logout separately returned 200 and both Secure/HttpOnly/Path=/ cookie deletions (session Strict, PKCE Lax), no Domain, Max-Age=0 and no-store. Provider outage cleanup is locally tested, not a live outage injection. |
 
@@ -126,7 +127,7 @@ Implemented server-side email-link request and callback, preserving shared Auth 
 | GET /api/auth/callback | 400 | `1e98d5d2-10d9-4ca9-a1c4-7cd3ccd2b75d` |
 | POST /api/auth/logout | 200 | `70ab512f-1b7d-4754-817b-fbbc44703c1e` |
 
-Keep PR #1 draft: real authenticated viewer/cross-tenant HTTP using the now-provisioned isolated QA fixtures, multi-tenant browser switching, detailed signed-in cookie/storage inspection, and delivered expired-link/replay acceptance remain open. Production backup/restore and operational release controls remain broader production gates.
+Keep PR #1 draft: direct PostgREST authenticated denial/tampering checks and delivered expired-link/replay acceptance remain open. The live FastAPI viewer/cross-tenant, tenant-switching, membership-removal and browser non-persistence checks now pass. Production backup/restore and operational release controls remain broader production gates.
 
 
 ## Single-account QA continuation
@@ -135,4 +136,34 @@ The user authorized continuation. Two synthetic fixture organizations, **Operis 
 
 `scripts/staging-browser/` contains a temporary same-origin browser harness for the authenticated API matrix, storage non-persistence and immediate membership-removal check. It is excluded from the ordinary Vite build. Staging deploy `6a9e8af94b31821a386414d1` temporarily includes `/__qa/pr1.html` alongside the unchanged application from `6fe2126`; restore the normal build after collecting the evidence. No backend test endpoints, credential forms, token export or authorization bypass were added.
 
-The first attempt at `2026-09-07T10:02:21.382Z` stopped at `/api/me` **401**, request `bb8500bb-b5d5-4427-92ae-50b69082ddd3`, because the browser remained signed out. No mutation requests ran; this is not an authenticated acceptance pass. A fresh sign-in-link request completed at approximately 10:01 UTC in the existing Chrome tab. Completion of that user sign-in is pending. PR remains draft.
+The first attempt at `2026-09-07T10:02:21.382Z` stopped at `/api/me` **401**, request `bb8500bb-b5d5-4427-92ae-50b69082ddd3`, because the browser remained signed out. No mutation requests ran in that attempt. The user subsequently completed password sign-in; this does not establish email-link delivery acceptance.
+
+### Authenticated browser receipt, 2026-09-07 10:11–10:15 UTC
+
+The same-origin harness completed all boundary assertions at `2026-09-07T10:11:27.035Z`, then membership-removal assertions at `2026-09-07T10:13:25.987Z`. It used the normal HttpOnly session and deployed FastAPI gateway. Credentials, tokens, account IDs and tenant IDs are omitted from this evidence. Sanitized backend request logs independently confirm the statuses and request IDs.
+
+| Live request | HTTP | Request ID |
+| --- | --- | --- |
+| Authenticated identity | 200 | `32a66787-2938-403a-9747-19577d35a5d2` |
+| Admin workspace | 200 | `49aa0d2a-d143-4b8c-ac9c-5f007ddfe92a` |
+| Viewer workspace | 200 | `5c3ae7d5-5fce-4be5-af7d-879d5332c256` |
+| Existing private workspace | 404 | `7c3f0433-c21c-4519-b82d-831168462172` |
+| Viewer rename | 403 | `bb9c3472-0878-49cf-b39f-c4c411998c79` |
+| Viewer company creation | 403 | `c4ee58bc-3308-460e-92b4-d4000b5a90a6` |
+| Viewer site creation | 403 | `e625933f-840a-4c30-a1cf-66559c71af35` |
+| Private tenant rename | 404 | `e71ad321-29c4-4d5c-a862-470429c39d38` |
+| Private company creation | 404 | `f43a2954-44c3-4a4b-abd1-e32b149583b3` |
+| Private site creation | 404 | `b4f94c35-0d36-40b5-846a-b544481cf28b` |
+| Admin site with private company parent | 404 | `bf1e8156-cf31-41f0-974e-ac8e9d05ff10` |
+| Viewer workspace after denied writes | 200 | `739ec1ff-1da1-47f2-a108-5c5aa996a534` |
+| Workspace immediately after membership removal | 404 | `fbcd9554-e1d8-43e7-9da3-e697d3084357` |
+| Identity after membership removal | 200 | `c9db7890-a20b-4e7a-894d-561578b7f331` |
+| App Refresh after membership removal | 404 | `f1af97ff-f8da-4e2f-b6b1-9e4bd82081ef` |
+| Authenticated logout | 200 | `fb02d894-c199-4f5f-b08e-95c1521208d6` |
+| Identity after logout and full reload | 401 | `e0a370ae-cf63-4efd-bc35-c3484b57c82a` |
+
+All harness requests also passed no-store, nonempty correlation ID and absence of access_token/refresh_token/id_token response fields. Browser document.cookie exposed neither Operis session nor PKCE cookie; localStorage and sessionStorage were empty. Viewer workspace JSON, including audit, matched before and after rejected writes. Independent database read-back found one fixture company and zero sites in each QA organization, with the original three/two audit events respectively, and zero `PR1-DENIED` companies or sites. Exactly one temporary viewer membership was subsequently removed; the original administrator membership remains intact.
+
+In the app, switching to QA Viewer showed only its fixture company, no sites and no organization/company/site write forms. Switching back restored the original administrator records and controls. After viewer membership removal, Refresh showed a load error with no private records; full reload removed QA Viewer from the selector and opened the original administrator workspace. Logout then removed private UI and reload stayed signed out.
+
+Application code remains `6fe2126`. Harness/documentation commit `10206b2` passed [GitHub Actions run 34109505166](https://github.com/Aim67TQ7/Operis/actions/runs/34109505166). Normal frontend deploy `6a9e8eae62c1bc79311a8cae` removed the temporary harness after evidence collection; its old route now serves the ordinary SPA fallback. HTTPS frontend and proxied readiness passed, readiness request `40228f29-562e-4a51-8bce-d01c62c6f8df`. Harness source remains available for a future explicitly scoped run. PR remains draft for the pending direct PostgREST and delivered email-link checks.
