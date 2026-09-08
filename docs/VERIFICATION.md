@@ -181,3 +181,14 @@ On 2026-09-07, after the remaining direct PostgREST checks were identified, the 
 On 2026-09-07, after the user-verified expired-link and PostgREST results were recorded and consumed-link replay was identified as the last unconfirmed case, the user instructed: “all good - let’s finalize PR”. This closes the user acceptance gate and authorizes moving PR #1 out of draft for review. It does not turn user-reported acceptance into independently captured HTTP evidence. The automated runner and direct replay receipt limitations above remain explicit.
 
 The preceding evidence commit `e3e1d4b` passed [GitHub Actions run 34112471483](https://github.com/Aim67TQ7/Operis/actions/runs/34112471483). There were no submitted PR reviews or inline review threads at finalization. No application, schema, shared Auth or deployment changes are part of this final documentation update. Production backup/restore and operational release controls remain separate from foundation review readiness.
+
+## Discovery continuation
+
+PR #3 adds the reviewed scanner, `/discovery`, strict server ingestion, immutable assessments and audited pilot requests. See [DISCOVERY.md](DISCOVERY.md) for its independent test/deployment receipts and remaining live gates. Foundation acceptance does not imply successful real Epicor scanning or browser upload acceptance.
+
+
+## Browser discovery continuation, 2026-09-08
+
+The user authorized a browser-run alternative after managed download restrictions blocked the local kit. The new bounded server reads and explicit save flow retain the existing staging architecture and atomic ingestion RPC. Production build/formatting passed; 125 API/scanner, 20 web and 26 PostgreSQL/PGlite tests passed. See [DISCOVERY.md](DISCOVERY.md#browser-discovery-continuation--2026-09-08) for exact collection/credential handling, bounds, provenance and outstanding live customer gates. No real Epicor API scan or successful browser save is inferred from these fixture-based tests. PR #3 remains draft.
+
+The browser feature is now deployed on the existing staging site, with Healthy Pete API source `483d7bb` and Netlify deploy `6a9fd60b15d51b7c8833a722`. [Application CI 34210719497](https://github.com/Aim67TQ7/Operis/actions/runs/34210719497) passed. Public asset bytes match the build; proxy readiness/auth/Origin checks and the signed-in unconfigured-company rejection passed. Detailed request IDs and immutable release identifiers are in the browser staging receipt in DISCOVERY.md. The customer sign-in and Epicor-credential entry remain a user handoff, so real discovery/save/pilot acceptance is still open.

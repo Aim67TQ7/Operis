@@ -1,6 +1,8 @@
+import re
 from functools import lru_cache
 from typing import Literal
 from urllib.parse import urlparse
+from uuid import UUID
 
 from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,9 +15,27 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_publishable_key: SecretStr = SecretStr("")
     session_seconds: int = 3600
+    discovery_ingest_key: SecretStr = SecretStr("")
+    discovery_browser_targets: dict[str, dict] = {}
 
     @model_validator(mode="after")
     def validate_production(self):
+        from .browser_discovery import valid_target
+
+        for tenant, target in self.discovery_browser_targets.items():
+            UUID(tenant)
+            if not isinstance(target.get("base_url"), str):
+                raise ValueError("Configure a fixed Epicor application URL")
+            valid_target(target["base_url"])
+            if (
+                not isinstance(target.get("companies"), list)
+                or not target["companies"]
+                or any(
+                    not isinstance(c, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,24}", c)
+                    for c in target["companies"]
+                )
+            ):
+                raise ValueError("Configure explicit Epicor company codes")
         origin = urlparse(self.app_origin)
         if not origin.netloc or origin.path not in ("", "/") or origin.query or origin.fragment:
             raise ValueError("APP_ORIGIN must be an origin without a path")
