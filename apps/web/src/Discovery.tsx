@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, type Company, type Tenant } from "./api";
 
+import { BrowserDiscovery } from "./BrowserDiscovery";
+
 const KIT = "/kits/operis-epicor-discovery-0.3.0.zip";
 type Measure = {
   key: string;
@@ -165,14 +167,14 @@ export function Discovery({
         <span className="eyebrow">EPICOR DISCOVERY / ASSISTED PILOT</span>
         <h2>From your ERP to a focused next step</h2>
         <p>
-          Run a limited, read-only scan inside your network. Review the
-          aggregate package, upload it here, and receive an assessment with
-          explicit coverage gaps.
+          Run a limited, read-only scan from your browser and review the
+          aggregate results before saving an assessment. A local scanner is also
+          available for networks that require it.
         </p>
         <ol className="discovery-steps">
           <li>Choose company</li>
-          <li>Download & run</li>
-          <li>Upload & assess</li>
+          <li>Run read-only discovery</li>
+          <li>Review & save</li>
           <li>Request pilot</li>
         </ol>
         <p className="muted">
@@ -201,8 +203,8 @@ export function Discovery({
       ) : (
         <section className="panel">
           <div className="panel-heading">
-            <h2>1. Prepare the scan</h2>
-            <span className="badge">Kit 0.3.0</span>
+            <h2>1. Choose the company</h2>
+            <span className="badge">Read-only assessment</span>
           </div>
           <div className="discovery-body">
             <label>
@@ -228,62 +230,80 @@ export function Discovery({
               </select>
             </label>
             <p>
-              Epicor company code: <strong>{company?.code}</strong>. Download
-              both files below. Extract the kit and place{" "}
-              <code>operis-scan-config.json</code> in the same folder.
-            </p>
-            <div className="discovery-actions">
-              <a className="button-link" href={KIT} download>
-                Download scanner kit
-              </a>
-              {canWrite && (
-                <a
-                  className="button-link"
-                  href={`/api${prefix}/companies/${companyId}/discovery/config`}
-                  download
-                >
-                  Download company configuration
-                </a>
-              )}
-              <a href={`${KIT}.sha256`} download>
-                SHA-256 checksum
-              </a>
-            </div>
-            <p>
-              On Windows, run <code>Run-Discovery.cmd</code>. Python 3.10+ is
-              required. Enter your Epicor URL and existing credentials locally.
-              Review the new ZIP in the <code>results</code> folder before
-              upload.
+              Epicor company code: <strong>{company?.code}</strong>. Use the
+              browser scan below.
             </p>
             <details>
-              <summary>What is collected and retained?</summary>
+              <summary>Optional: use the local scanner instead</summary>
               <p>
-                The kit exports aggregate counts, coverage statuses, timestamps
-                and the selected company binding. It does not export invoice
-                lines, financial amounts, credentials, endpoint URLs,
-                definitions or raw responses. Unsupported probes remain unknown.
-                Credentials stay on your machine; the kit never uploads
-                automatically.
+                Extract the kit and place <code>operis-scan-config.json</code>{" "}
+                in the same folder.
               </p>
+              <div className="discovery-actions">
+                <a className="button-link" href={KIT} download>
+                  Download scanner kit
+                </a>
+                {canWrite && (
+                  <a
+                    className="button-link"
+                    href={`/api${prefix}/companies/${companyId}/discovery/config`}
+                    download
+                  >
+                    Download company configuration
+                  </a>
+                )}
+                <a href={`${KIT}.sha256`} download>
+                  SHA-256 checksum
+                </a>
+              </div>
               <p>
-                Operis accepts only the current kit format, up to 1 MiB, and
-                retains validated aggregate assessments and audit history. Raw
-                ZIP files are not retained. Delete the extracted kit,
-                configuration and results to remove the local files.
+                On Windows, run <code>Run-Discovery.cmd</code>. Python 3.10+ is
+                required. Enter your Epicor URL and existing credentials
+                locally. Review the new ZIP in the <code>results</code> folder
+                before upload.
               </p>
-              <p>
-                The signed configuration expires after seven days. Download a
-                new one if it expires or your company code changes. Only scan an
-                environment your organization authorizes.
-              </p>
+              <details>
+                <summary>What is collected and retained?</summary>
+                <p>
+                  The kit exports aggregate counts, coverage statuses,
+                  timestamps and the selected company binding. It does not
+                  export invoice lines, financial amounts, credentials, endpoint
+                  URLs, definitions or raw responses. Unsupported probes remain
+                  unknown. Credentials stay on your machine; the kit never
+                  uploads automatically.
+                </p>
+                <p>
+                  Operis accepts only the current kit format, up to 1 MiB, and
+                  retains validated aggregate assessments and audit history. Raw
+                  ZIP files are not retained. Delete the extracted kit,
+                  configuration and results to remove the local files.
+                </p>
+                <p>
+                  The signed configuration expires after seven days. Download a
+                  new one if it expires or your company code changes. Only scan
+                  an environment your organization authorizes.
+                </p>
+              </details>
             </details>
           </div>
         </section>
       )}
+      {company && canWrite && (
+        <BrowserDiscovery
+          key={`${tenant.id}:${company.id}`}
+          prefix={prefix}
+          companyId={company.id}
+          onExpired={onExpired}
+          onSaved={async (id) => {
+            await show(id);
+            setRuns(await api<Run[]>(`${prefix}/discovery`));
+          }}
+        />
+      )}
       {company && (
         <section className="panel">
           <div className="panel-heading">
-            <h2>2. Upload your results</h2>
+            <h2>Alternative: upload local scanner results</h2>
             <span className="muted">Aggregate ZIP · maximum 1 MiB</span>
           </div>
           <div className="discovery-body">
@@ -482,7 +502,10 @@ export function Discovery({
           {loading ? (
             <p role="status">Loading assessments…</p>
           ) : !runs.length ? (
-            <p>No assessments yet. Upload your first completed scan above.</p>
+            <p>
+              No assessments yet. Run discovery or upload a completed scan
+              above.
+            </p>
           ) : (
             <div className="table-scroll">
               <table>

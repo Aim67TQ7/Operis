@@ -185,3 +185,8 @@ The preceding evidence commit `e3e1d4b` passed [GitHub Actions run 34112471483](
 ## Discovery continuation
 
 PR #3 adds the reviewed scanner, `/discovery`, strict server ingestion, immutable assessments and audited pilot requests. See [DISCOVERY.md](DISCOVERY.md) for its independent test/deployment receipts and remaining live gates. Foundation acceptance does not imply successful real Epicor scanning or browser upload acceptance.
+
+
+## Browser discovery continuation, 2026-09-08
+
+The user authorized a browser-run alternative after managed download restrictions blocked the local kit. The new bounded server reads and explicit save flow retain the existing staging architecture and atomic ingestion RPC. Production build/formatting passed; 124 API/scanner, 20 web and 26 PostgreSQL/PGlite tests passed. See [DISCOVERY.md](DISCOVERY.md#browser-discovery-continuation--2026-09-08) for exact collection/credential handling, bounds, provenance and outstanding live customer gates. No real Epicor API scan or successful browser save is inferred from these fixture-based tests. PR #3 remains draft.

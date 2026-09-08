@@ -466,3 +466,7 @@ def install_routes(app, user_dependency, gateway_dependency, member):
             payload={"p_tenant": str(tenant_id), "p_run": str(run_id)},
             request_id=request.state.request_id,
         )
+
+    from .browser_discovery import install_browser_routes
+
+    install_browser_routes(app, User, GW, company_access, signing_key)

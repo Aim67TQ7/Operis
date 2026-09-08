@@ -62,7 +62,7 @@ test("upload sends reviewed ZIP through same-origin API and persists pilot reque
     />,
   );
   await screen.findByText(
-    "No assessments yet. Upload your first completed scan above.",
+    "No assessments yet. Run discovery or upload a completed scan above.",
   );
   const upload = screen.getByRole("button", {
     name: "Upload and create assessment",

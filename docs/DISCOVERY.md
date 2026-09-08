@@ -10,7 +10,7 @@ The existing Lovable AP Entry Lab at commit `37f41104d67c7bbfc2bee16a88d9941880b
 
 This kit deliberately provides a bounded metadata assessment: eleven count/schema probes, with an authorized company check. It does not do full-estate discovery, export definitions, infer GL coding correctness, estimate savings, or support SyteLine. No ERP writes or communications are triggered. See scanner/README.md for the exact collection disclosure and limits.
 
-## Customer workflow
+## Local scanner workflow
 
 1. Open `/discovery`, sign in using the existing Operis account, and select a company whose code matches Epicor.
 2. Download `/kits/operis-epicor-discovery-0.3.0.zip` and the authenticated company configuration. Extract the kit and place `operis-scan-config.json` alongside the Python script.
@@ -70,3 +70,32 @@ Local build, offline API/scanner tests, browser component tests and real Postgre
 The Chrome extension rejected file selection with `fileChooser.setFiles: Not allowed`; its documented requirement is "Allow access to file URLs." A package was prepared, but no browser upload, saved assessment or pilot click is claimed. The user was asked to enable the extension setting. The real Epicor company/environment selection is also still awaiting the user's answer. Existing Epicor settings were identified on the Mac, but were not used without confirming the intended test target. No customer ERP scan or customer invitation has occurred.
 
 Keep PR #3 draft until the remaining acceptance receipts are recorded. Earlier source/compile/database successes do not close these gates.
+
+
+## Browser discovery continuation — 2026-09-08
+
+The user authorized browser-initiated discovery after organizational policy blocked scanner downloads. The existing Netlify → same-origin FastAPI on Pete → caller-JWT PostgREST architecture remains. No new database migration, worker, credential store, public signup or ERP write capability is introduced.
+
+### Browser workflow
+
+1. Sign in to the provisioned Operis organization. Select an existing company with the exact Epicor company code.
+2. Choose **Set up browser scan**. The API returns the operator-configured HTTPS application endpoint for this tenant/company. A company without configuration receives an explicit setup error before credential entry.
+3. Enter an authorized Epicor username, password and API key in the form, confirm the read-only collection, and select **Run read-only discovery**. The browser sends these credentials over the existing same-origin HTTPS API; they are used only in request memory and are not saved, returned, or logged. Password/API-key inputs clear when the request starts. Existing Kinetic browser sign-in is not reused or extracted.
+4. Inspect the aggregate preview. Missing, denied, malformed or oversized measurements remain explicit unknowns. The company preflight must succeed; failure or timeout creates no assessment. The preview remains in component memory, expires after 30 minutes and is discarded on company/organization change or reload.
+5. Select **Save assessment** to persist the aggregate observations, computed assessment and atomic audit through the existing RPC. A signed receipt binds tenant, company, code, actor, endpoint, measurements and expiry. Identical retries use the same scan identity/hash. The endpoint and credentials are omitted from persisted assessment data. View the saved assessment and existing history without downloading anything.
+
+The collection remains the reviewed kit's seven count and four schema probes plus a selected-company preflight: twelve GET requests, no paging of business records, and no retained definitions or raw responses. Coverage is company-wide; choosing a site in Kinetic does not make this a site-filtered assessment. Browser scans have a different provenance statement from customer-supplied ZIP observations. The existing database's legacy original-filename field remains `aggregate-discovery.zip`; browser runs are identified by the report's server-observation statement, and their evidence hash covers the signed payload rather than an uploaded ZIP.
+
+### Operator configuration and bounds
+
+Set `OPERIS_DISCOVERY_BROWSER_TARGETS` to a JSON map of tenant UUID to `{"base_url":"https://erp.example/Test","companies":["TEST"]}`. Use `{}` to disable browser scans. Company codes must be explicitly listed; requests cannot select an arbitrary URL. Keep actual customer mappings in Pete's existing mode-600 env file, outside Git. Compose requires this setting; set it before upgrading. Preserve the existing ingestion capability and all other environment settings.
+
+Destinations require HTTPS/443 without embedded credentials, query, fragment or ambiguous path escapes. Runtime DNS rejects nonpublic addresses; redirects are not followed, TLS is verified, and environment HTTP proxies are disabled. This is an operator-controlled destination allowlist, not a public URL-fetch service. Probe response bodies are bounded at 4 MiB after decoding. Requests use a four-second network timeout and the complete Epicor read phase has a 22-second deadline, with at most three probes in flight. The single-worker staging API allows one scan at a time and three attempts per user per ten minutes. No automatic retries or background jobs are created. Cancel discards the browser result; any already-started reads can continue only within the deadline, and no automatic save occurs.
+
+Authenticated current admin/operator membership and company ownership are checked before network access, again before returning results, and on save. The database independently locks/rechecks membership and company on commit. Viewers receive 403, absent membership/company receives 404, and unconfigured companies receive 409. JSON bodies are size-bounded; malformed credential input and upstream failures produce redacted errors. The same-origin Origin check and no-store response policy apply to all new routes.
+
+### Executed local checks
+
+Production build and formatting passed. API/scanner: **124 passed**; web: **20 passed**; PostgreSQL/PGlite: **26 passed**. New tests cover endpoint/probe parity, GET-only transport, redaction, strict input bounds, redirects/private-network denial, unavailable probes, timeout, rate limiting, tenant/viewer rejection, membership removal during scan, receipt tampering/actor binding/expiry, stable save retries, explicit save, credential clearing, cancellation and company-switch isolation. PostgreSQL tests continue to verify atomic persistence/audit, direct-write rejection and immutable retries on the reused RPC.
+
+These tests use synthetic upstream responses. They do not establish real Epicor API authentication or successful customer discovery. Live browser execution with the customer's credentials, saved assessment/audit read-back and pilot review remain acceptance gates; keep PR #3 draft until those receipts pass. The authorized test environment/company scope has now been supplied by the user, superseding the earlier “target pending” note. Organizational download restrictions remain in place; the browser flow requires neither a downloaded scanner nor file-picker access.

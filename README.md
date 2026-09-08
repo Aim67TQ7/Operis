@@ -16,7 +16,7 @@ Operis is an operating intelligence layer above existing business systems. This 
 
 ## Discovery assessment
 
-The integrated `/discovery` workflow and scanner kit 0.3.0 are implemented on this branch. Server-validated aggregate uploads, immutable assessments and audited pilot requests are described in [DISCOVERY.md](docs/DISCOVERY.md), including staging receipts and remaining live acceptance. The scanner is an assisted, limited metadata assessment, not a certified full-estate or AP automation product.
+The integrated `/discovery` workflow and scanner kit 0.3.0 are implemented on this branch. Browser-initiated bounded scans, server-validated aggregate uploads, immutable assessments and audited pilot requests are described in [DISCOVERY.md](docs/DISCOVERY.md), including staging receipts and remaining live acceptance. The scanner is an assisted, limited metadata assessment, not a certified full-estate or AP automation product.
 
 ## Layout
 
