@@ -21,13 +21,13 @@
   },
   {
     "path":"/resources/syteline/","kind":"guide","label":"Infor SyteLine planning",
-    "title":"SyteLine & CloudSuite Industrial Discovery | OPERIS",
-    "h1":"Map your SyteLine workflows and integration dependencies.",
+    "title":"Infor SyteLine & CloudSuite Industrial Discovery | OPERIS",
+    "h1":"Map your Infor SyteLine and CloudSuite Industrial workflows.",
     "description":"A discovery guide for Infor SyteLine and CloudSuite Industrial teams assessing reports, customizations, data access, and manufacturing workflows.",
     "sections":[
-      {"heading":"Start with your exact environment","paragraphs":["Infor uses SyteLine and CloudSuite Industrial within its manufacturing product family. Record the actual version, deployment, licensed capabilities, and extensions used by your organization. Similar product names do not establish identical integration behavior.","Choose one business process and map how information crosses reports, forms, external applications, and people. Separate documented interfaces from assumptions about how the environment works."]},
+      {"heading":"Start with your exact environment","paragraphs":["Prioritize the terms your team and vendor materials actually use: Infor SyteLine, CloudSuite Industrial, or both. Record the actual version, deployment, licensed capabilities, and extensions used by your organization. Similar product names do not establish identical integration behavior.","Choose one business process and map how information crosses reports, forms, external applications, and people. Separate documented interfaces from assumptions about how the environment works."]},
       {"heading":"Questions for the system owner","items":["Which reports are essential to daily production or financial reconciliation?","Which custom forms or extensions contain company-specific rules?","Who owns each interface, and how are failed transfers detected?","Which data can be accessed through approved interfaces in this version?","What changes when the deployment or update schedule changes?","How will a pilot prove source totals, permissions, and data freshness?"]},
-      {"heading":"Use discovery to choose the first improvement","paragraphs":["A first pilot might focus on visibility into one exception queue or the handoff between a report and a person. Define the expected source values, the permitted users, and the action that remains with the business owner.","SyteLine is a target area for OPERIS research and adapter planning. A production-ready OPERIS SyteLine connector has not been verified in this foundation. These resources support evaluation; they are not a compatibility certification."]}
+      {"heading":"Use discovery to choose the first improvement","paragraphs":["A first pilot might focus on visibility into one exception queue or the handoff between a report and a person. Define the expected source values, the permitted users, and the action that remains with the business owner.","Infor SyteLine and CloudSuite Industrial are target areas for OPERIS research and adapter planning. A production-ready OPERIS connector for either environment has not been verified in this foundation. These resources support evaluation; they are not a compatibility certification."]}
     ],
     "sources":[{"label":"Infor: SyteLine product overview","url":"https://www.infor.com/solutions/erp/syteline"},{"label":"SyteLine User Network","url":"https://www.sytelineusernetwork.com/"}]
   },

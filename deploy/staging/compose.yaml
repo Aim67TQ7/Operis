@@ -20,8 +20,8 @@ services:
     environment:
       OPERIS_ENVIRONMENT: production
       OPERIS_APP_ORIGIN: https://operis-staging.netlify.app
-      OPERIS_SUPABASE_URL: https://ezlmmegowggujpcnzoda.supabase.co
-      OPERIS_SUPABASE_PUBLISHABLE_KEY: ${OPERIS_SUPABASE_PUBLISHABLE_KEY:?Set the ZODA publishable key}
+      OPERIS_SUPABASE_URL: ${OPERIS_SUPABASE_URL:?Set the approved provider project URL}
+      OPERIS_SUPABASE_PUBLISHABLE_KEY: ${OPERIS_SUPABASE_PUBLISHABLE_KEY:?Set the approved provider publishable key}
       OPERIS_SESSION_SECONDS: "3600"
     expose:
       - "8000"
@@ -30,7 +30,7 @@ services:
     labels:
       caddy: ${OPERIS_API_HOSTNAME:?Set the confirmed DNS hostname}
       caddy.reverse_proxy: "{{upstreams 8000}}"
-      caddy_ingress_network: hub-net
+      caddy_ingress_network: ${OPERIS_INGRESS_NETWORK:?Set the approved reverse-proxy network}
     logging:
       driver: json-file
       options:
@@ -40,4 +40,4 @@ services:
 networks:
   ingress:
     external: true
-    name: hub-net
+    name: ${OPERIS_INGRESS_NETWORK:?Set the approved reverse-proxy network}

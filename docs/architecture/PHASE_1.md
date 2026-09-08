@@ -1,8 +1,8 @@
 # Phase 1: Operis foundation
 
-Status: first foundation slice implemented and tested; ZODA schema applied and staging frontend deployed. Backend hosting and end-to-end acceptance remain pending.
+Status: first foundation slice implemented and tested; staging schema applied and staging frontend deployed. Backend hosting and end-to-end acceptance remain pending.
 
-The user authorized starting Operis and deferred discovery/rebuild of existing Lovable templates to Phase 2. This supersedes the seed's requirement to finish legacy-system discovery before construction. The destination is Aim67TQ7/Operis, initially one README on main at c0b7cf6.
+Operis foundation work is authorized, and discovery/rebuild of existing templates is deferred to Phase 2. This supersedes the seed's requirement to finish legacy-system discovery before construction. The destination is Aim67TQ7/Operis, initially one README on main.
 
 ## First slice
 
@@ -24,10 +24,10 @@ Visual thesis: a quiet industrial workspace, dark navy rail, white working surfa
 
 ## Boundaries
 
-React + TypeScript on Vite uses same-origin `/api` requests. FastAPI holds the Supabase access token in an HttpOnly cookie and never returns tokens in JSON. It uses the user JWT for PostgREST, so RLS remains active; no service-role key is needed by the web runtime. Supabase Auth verifies identity remotely on authenticated requests. Sessions deliberately require reauthentication after at most one hour; refresh-token persistence is deferred.
+React + TypeScript on Vite uses same-origin `/api` requests. FastAPI holds the provider access token in an HttpOnly cookie and never returns tokens in JSON. It uses the user JWT for provider HTTP data calls, so row security remains active; no service-role key is needed by the web runtime. The identity provider verifies identity remotely on authenticated requests. Sessions deliberately require reauthentication after at most one hour; refresh-token persistence is deferred.
 
 Postgres owns tenancy, organization structure, membership, and append-only audit events. Membership is read from the database, never user-editable JWT metadata. Tenant administrators may change organization structure. Operators/viewers have structural read access. Company/site restrictions for operational records are a Phase 2 contract, not a claim of implemented record-level permissions.
 
 Tenant provisioning is an explicit operator SQL transaction, separate from customer authentication. Payment activation and entitlement verification must precede opening public onboarding. The first slice does not implement the commercial payment flow.
 
-Deployment follows the seed: Netlify frontend with a same-origin API proxy and Docker FastAPI service. Sites' default Worker/Vinext runtime is not adopted because it conflicts with the requested Vite/Python stack. The staging frontend and additive ZODA schema are provisioned; see ../STAGING.md.
+Deployment follows the seed: hosted frontend with a same-origin API proxy and Docker FastAPI service. Sites' default Worker/Vinext runtime is not adopted because it conflicts with the requested Vite/Python stack. The staging frontend and additive schema are provisioned; see ../STAGING.md.

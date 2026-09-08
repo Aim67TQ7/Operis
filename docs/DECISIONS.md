@@ -1,20 +1,18 @@
 # Architecture decisions
 
-Append-only. Owner of product decisions: Robert Clausing. Implementation proposals: engineering.
+Public decision record for the foundation source. Private operator names, host identifiers and provider project details are intentionally omitted.
 
-| Date | Decision | Status | Evidence | Consequence | Supersedes |
-| --- | --- | --- | --- | --- | --- |
-| 2026-09-05 | Start new Operis foundation; move Lovable template discovery/rebuild to Phase 2 | Approved by user | Conversation: “start the build … lovable template builds in phase 2” | Legacy access is no longer a prerequisite for this slice | Seed's full legacy discovery gate before construction |
-| 2026-09-05 | Retain Vite, React, TypeScript, Python/FastAPI, Supabase/Postgres, Netlify and Docker direction | Accepted seed constraint | Uploaded build seed sections 7–8 | No alternate Worker backend or frontend framework | None |
-| 2026-09-05 | Modular monolith, same-origin API, RLS enforced with caller JWT | Implemented; deployment pending | apps/api/operis; supabase/schema.sql | No service-role credential in runtime; proxy must preserve cookies and Origin | None |
-| 2026-09-05 | Email-code sign-in for already provisioned verified users; no public signup | Proposed first-release policy; implemented | Need identity without enabling unpaid organization creation | Requires OTP email template/SMTP and explicit first-admin provisioning; Microsoft SSO can follow | None |
-| 2026-09-05 | Short sessions with no refresh persistence | Proposed first-release policy; implemented | Cookie-only seed requirement; small first slice | Reauthentication at token expiry, maximum configured cookie age 1h; strict token revocation gate before operational actions | None |
-| 2026-09-05 | Membership administration and initial tenant creation remain operator-only | Proposed first-release policy; implemented | Secure bootstrap before payment/activation exists | Users cannot grant themselves access; no payment verification implied | None |
-| 2026-09-05 | No live infrastructure or legacy database changes in foundation PR | Implementation boundary | No verified dedicated Operis environment | Schema, deployment files and setup are reviewable before live changes | None |
-| 2026-09-05 | Use existing ZODA Supabase instance for Operis staging | Approved by user; applied | Conversation: “yes. Use ZODA instance of database.” | Additive Operis-only objects; preserve shared Auth and legacy data; no new Supabase project | Initial dedicated-project assumption and no-live-infrastructure boundary |
-| 2026-09-05 | Create operis-staging under the n0v8v Netlify team | Approved staging setup; frontend deployed | User approved proposed staging resources; deployment receipt in STAGING.md | Source-upload frontend deploy; API remains explicitly unavailable until Docker host is configured | Local-only frontend setup |
-| 2026-09-05 | Host the Docker FastAPI backend on existing Hostinger Pete | Approved by user; deployment prepared | User selected Pete and supplied SSH/container/network output | Join existing hub-net and use hub-caddy labels; hostname/DNS and runtime acceptance pending | Unselected Docker backend host |
-| 2026-09-05 | Route Netlify API requests to operis-api.gp3.app on Pete | Authorized staging continuation; backend HTTPS readiness verified by user | Pete container Healthy and readiness HTTP 200 after ZODA key correction | Publish same-origin API proxy; real sign-in and first-admin provisioning remain pending | Unconfigured API placeholder |
-| 2026-09-05 | Name the first organization Magnet Applications | Approved by user | User supplied the organization name during first-admin setup | Provision tenant and admin membership together once the designated Auth account is verified | Unselected initial organization name |
-| 2026-09-05 | First organization is Operis; designated existing verified administrator provisioned | Approved and verified | Explicit user selection; tenant and membership audit read-back | Supersedes earlier organization name; account identifiers excluded from public source | Magnet Applications name |
-| 2026-09-05 | Use PKCE magic links with server-side exchange and browser-bound verifier | Authorized by user | Shared ZODA email delivers magic links | Add only Operis callback to redirect allowlist; retain shared Site URL/template | Email-code-only assumption |
+| Date | Decision | Status | Public consequence |
+| --- | --- | --- | --- |
+| 2026-09-05 | Start new Operis foundation; move existing template discovery/rebuild to Phase 2 | Approved | Legacy access is no longer a prerequisite for this slice |
+| 2026-09-05 | Retain Vite, React, TypeScript, Python/FastAPI, provider-backed Postgres, hosted frontend and Docker direction | Accepted | No alternate Worker backend or frontend framework in this foundation |
+| 2026-09-05 | Modular monolith, same-origin API, row security enforced with caller JWT | Implemented; deployment-gated | No service-role credential in runtime; proxy must preserve cookies and Origin |
+| 2026-09-05 | Email-code sign-in for already provisioned verified users; no public signup | Implemented; deployment-gated | Requires provider email configuration and explicit first-admin provisioning |
+| 2026-09-05 | Short sessions with no refresh persistence | Implemented | Reauthentication at token expiry; stricter revocation checks required before operational actions |
+| 2026-09-05 | Membership administration and initial tenant creation remain operator-only | Implemented | Users cannot grant themselves access; no payment verification implied |
+| 2026-09-05 | No unapproved live infrastructure or legacy database changes in foundation source | Boundary | Schema, deployment files and setup are reviewable before live changes |
+| 2026-09-05 | Use an approved shared provider project for staging | Applied | Additive Operis-only objects; preserve shared provider settings and legacy data |
+| 2026-09-05 | Host the Docker FastAPI backend on an approved staging host | Prepared | Runtime acceptance, DNS and browser flow validation remain gates |
+| 2026-09-05 | Keep private backend origins out of public source | Applied | Public Netlify config defaults to an explicit unconfigured API response |
+| 2026-09-05 | Provision the first organization through an operator-controlled transaction | Applied | Account identifiers are excluded from public source |
+| 2026-09-05 | Use PKCE magic links with server-side exchange and browser-bound verifier | Implemented; deployment-gated | Real email callback testing remains required before acceptance |

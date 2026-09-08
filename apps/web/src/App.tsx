@@ -529,7 +529,7 @@ function PasswordSettings() {
     finally {setBusy(false); setPassword(""); setConfirm("");}
   }
   return <details className="panel"><summary>Account password</summary>
-    <p>Set or change your shared ZODA account password. This also changes the password used by other apps connected to this account.</p>
+    <p>Set or change your account password. This may also affect other applications connected to the same identity provider.</p>
     <p>Use at least 12 characters. If you forget it, sign in with an email link and return here.</p>
     {error && <Notice>{error}</Notice>}
     {done && <Notice kind="success">Password saved. You can now sign in with your email and password.</Notice>}

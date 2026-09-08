@@ -25,8 +25,13 @@ test('static content is readable without JS and drafts never enter sitemap or fe
     await build({SEO_INDEXABLE:'true',SITE_URL:'https://example.com'},out);
     const html=await readFile(join(out,'resources/epicor/index.html'),'utf8');
     assert.match(html, /<h1[^>]*>Understand your Epicor/);
+    assert.match(html, /href="\/resources\/discovery-readiness\/">Review discovery readiness/);
+    assert.doesNotMatch(html, /<form|contact|lead capture|downloadable customer scanner/i);
     assert.match(html, /content="index, follow"/);
     assert.doesNotMatch(html, /<script/);
+    const syteline=await readFile(join(out,'resources/syteline/index.html'),'utf8');
+    assert.match(syteline, /Infor SyteLine and CloudSuite Industrial/);
+    assert.match(syteline, /not a compatibility certification/);
     const sitemap=await readFile(join(out,'sitemap.xml'),'utf8');
     assert.match(sitemap,/https:\/\/example.com\/resources\/epicor\//);
     assert.doesNotMatch(sitemap,/dependency-inventory/);
