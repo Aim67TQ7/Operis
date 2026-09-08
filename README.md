@@ -4,6 +4,10 @@
 
 Operis is an operating intelligence layer above existing business systems. This repository starts its platform foundation. Existing Lovable builds and operational integrations are Phase 2.
 
+## Project wiki
+
+Start with the [Operis wiki home](docs/wiki/Home.md) for the user workflow, browser discovery, roles, architecture, troubleshooting and current release status.
+
 ## Implemented in this foundation
 
 - Vite + React + TypeScript organization workspace, with responsive navigation and explicit loading/error/empty states.
