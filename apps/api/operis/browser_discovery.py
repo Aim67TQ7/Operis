@@ -93,6 +93,7 @@ async def scan(base, company, credentials, transport=None):
         headers={
             "x-api-key": credentials.api_key.get_secret_value(),
             "Accept": "application/json",
+            "Accept-Encoding": "identity",
             "User-Agent": "operis-browser-discovery/0.3.0",
         },
         timeout=4,
@@ -112,6 +113,9 @@ async def scan(base, company, credentials, transport=None):
                             404: "not_exposed",
                             429: "rate_limited",
                         }.get(response.status_code, "http_error"), None
+                    # Do not let automatic HTTP decompression allocate an unbounded body.
+                    if response.headers.get("content-encoding", "identity").lower() not in ("", "identity"):
+                        return "invalid_response", None
                     body = bytearray()
                     async for chunk in response.aiter_bytes():
                         if len(body) + len(chunk) > MAX_RESPONSE:

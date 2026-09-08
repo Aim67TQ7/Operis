@@ -66,6 +66,7 @@ def test_reads_then_explicit_save_are_bound_and_credentials_are_discarded(harnes
         assert str(req.url).startswith(BASE + "/api/v2/odata/TEST/")
         assert "$count" in str(req.url) or "$metadata" in str(req.url) or "$select=Company1" in str(req.url)
         assert req.headers["x-api-key"] == CREDS["api_key"]
+        assert req.headers["accept-encoding"] == "identity"
         assert req.headers["Authorization"].startswith("Basic ")
     saved = client.post(PATH + "/save", json=value["receipt"], headers=HEADERS)
     assert saved.status_code == 200, saved.text
@@ -253,3 +254,18 @@ async def test_private_network_resolution_rejected(monkeypatch, address):
 def test_metadata_rejects_unsafe_or_unrecognized_data(data):
     with pytest.raises(ValueError):
         browser.reduce_metadata(data)
+
+
+async def test_compressed_responses_are_rejected_before_reading():
+    class MustNotRead(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            raise AssertionError("Compressed response must not be read or decompressed")
+            yield b""
+
+    def handler(req):
+        return httpx.Response(200, headers={"Content-Encoding": "gzip"}, stream=MustNotRead())
+
+    with pytest.raises(HTTPException) as exc:
+        await browser.scan(BASE, "TEST", browser.Credentials(**CREDS), httpx.MockTransport(handler))
+    assert exc.value.status_code == 422
+    assert "invalid_response" in exc.value.detail
