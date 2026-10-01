@@ -1,0 +1,4 @@
+interface:
+  display_name: "OPERIS Finance Review"
+  short_description: "Explain margin, exposure and financial changes"
+  default_prompt: "Use $operis-finance-review to explain the financial changes in my company's supplied data."
