@@ -1,0 +1,27 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "operis-finance",
+  "version": "0.1.0",
+  "description": "Explain manufacturing financial results using the customer's own exports or explicitly configured read-only MCP connection.",
+  "author": {"name": "OPERIS"},
+  "repository": "https://github.com/Aim67TQ7/Operis",
+  "keywords": ["manufacturing", "finance", "erp", "variance", "read-only"],
+  "extensions": {
+    "com.openai": {
+      "skills": "./skills/",
+      "interface": {
+        "displayName": "OPERIS Finance",
+        "shortDescription": "Explain financial changes from your ERP",
+        "longDescription": "Prepare source-backed margin, cash-exposure and management reviews from your own data. No shared customer connection is included. Live access requires a separately configured and authenticated customer MCP server.",
+        "developerName": "OPERIS",
+        "category": "Productivity",
+        "capabilities": ["Read"],
+        "defaultPrompt": [
+          "Explain the change in gross margin between these two periods using my company's financial exports.",
+          "Review our receivables, payables and open purchasing commitments using the files I provide.",
+          "Prepare a concise management finance briefing with reconciled totals and source references."
+        ]
+      }
+    }
+  }
+}

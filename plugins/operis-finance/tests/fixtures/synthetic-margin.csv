@@ -1,0 +1,5 @@
+record_id,company,currency,period,revenue,cogs,segment
+aug-1,Example Manufacturer,USD,FY2026-P08,100000,60000,Equipment
+aug-2,Example Manufacturer,USD,FY2026-P08,50000,25000,Replacement Parts
+sep-1,Example Manufacturer,USD,FY2026-P09,120000,84000,Equipment
+sep-2,Example Manufacturer,USD,FY2026-P09,30000,15000,Replacement Parts
